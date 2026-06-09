@@ -288,10 +288,36 @@ nav {
   padding: 14px 24px; cursor: pointer; transition: all 0.2s;
 }
 .btn-google:hover { border-color: var(--gold); background: var(--gold-dim); }
-#logout-btn {
-  position: fixed; top: max(12px, env(safe-area-inset-top)); right: 16px; z-index: 101;
+.topbar-home { position: relative; }
+.profile-menu {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  right: 0;
+  z-index: 10;
   display: none;
 }
+.profile-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--muted2); padding: 6px;
+  display: flex; align-items: center; justify-content: center;
+  transition: color 0.2s;
+}
+.profile-btn:hover { color: var(--muted); }
+.profile-btn svg { width: 20px; height: 20px; stroke-width: 1.5; }
+.profile-dropdown {
+  display: none; position: absolute; top: 100%; right: 0; margin-top: 4px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); min-width: 120px; overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.profile-dropdown.open { display: block; }
+.profile-dropdown-item {
+  width: 100%; background: none; border: none;
+  color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 13px;
+  padding: 10px 14px; text-align: left; cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.profile-dropdown-item:hover { background: var(--bg3); color: var(--text); }
 </style>
 </head>
 <body>
@@ -304,11 +330,17 @@ nav {
     Logg inn med Google
   </button>
 </div>
-<button class="btn-ghost" id="logout-btn" onclick="signOut()">Logg ut</button>
-
 <!-- HOME -->
 <div class="page active" id="page-hjem">
-  <div class="topbar">
+  <div class="topbar topbar-home">
+    <div id="profile-menu" class="profile-menu">
+      <button type="button" class="profile-btn" onclick="toggleProfileMenu(event)" aria-label="Profil">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </button>
+      <div class="profile-dropdown" id="profile-dropdown" onclick="event.stopPropagation()">
+        <button type="button" class="profile-dropdown-item" onclick="signOut()">Logg ut</button>
+      </div>
+    </div>
     <div>
       <div class="topbar-title" id="home-greeting">God morgen</div>
       <div class="topbar-sub" id="home-date"></div>
@@ -739,6 +771,20 @@ async function loadSoberStart() {
 // ── AUTH ──────────────────────────────────────────────────
 let currentUser = null;
 
+function setProfileMenuVisible(visible) {
+  const menu = document.getElementById('profile-menu');
+  if (menu) menu.style.display = visible ? 'block' : 'none';
+}
+
+function toggleProfileMenu(e) {
+  e.stopPropagation();
+  document.getElementById('profile-dropdown').classList.toggle('open');
+}
+
+document.addEventListener('click', () => {
+  document.getElementById('profile-dropdown')?.classList.remove('open');
+});
+
 async function signInWithGoogle() {
   await sb.auth.signInWithOAuth({
     provider: 'google',
@@ -750,10 +796,11 @@ async function signInWithGoogle() {
 }
 
 async function signOut() {
+  document.getElementById('profile-dropdown')?.classList.remove('open');
   await sb.auth.signOut();
   currentUser = null;
   document.getElementById('auth-overlay').style.display = 'flex';
-  document.getElementById('logout-btn').style.display = 'none';
+  setProfileMenuVisible(false);
   document.querySelectorAll('.page, nav').forEach(el => el.style.display = 'none');
 }
 
@@ -763,7 +810,7 @@ async function initAuth() {
   if (session) {
     currentUser = session.user;
     document.getElementById('auth-overlay').style.display = 'none';
-    document.getElementById('logout-btn').style.display = 'block';
+    setProfileMenuVisible(true);
     await initApp();
   } else {
     const params = new URLSearchParams(window.location.search);
@@ -773,7 +820,7 @@ async function initAuth() {
       if (data?.session) {
         currentUser = data.session.user;
         document.getElementById('auth-overlay').style.display = 'none';
-        document.getElementById('logout-btn').style.display = 'block';
+        setProfileMenuVisible(true);
         document.querySelectorAll('.page, nav').forEach(el => el.style.display = '');
         window.history.replaceState({}, document.title, window.location.pathname);
         await initApp();
@@ -787,7 +834,7 @@ async function initAuth() {
     if (event === 'SIGNED_IN' && session) {
       currentUser = session.user;
       document.getElementById('auth-overlay').style.display = 'none';
-      document.getElementById('logout-btn').style.display = 'block';
+      setProfileMenuVisible(true);
       document.querySelectorAll('.page, nav').forEach(el => el.style.display = '');
       await initApp();
     }
