@@ -617,7 +617,11 @@ nav {
 // ── SUPABASE ─────────────────────────────────────────────
 const SUPABASE_URL = 'https://ujjfxyavsvitgugockbm.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqamZ4eWF2c3ZpdGd1Z29ja2JtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMTYwMTAsImV4cCI6MjA5NjU5MjAxMH0.O1IB3m1TGr12WicsDVIs6n5G0qePDC1cesb2Kymvl2s';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    flowType: 'implicit'
+  }
+});
 
 async function getUserId() {
   const { data: { user } } = await sb.auth.getUser();
@@ -738,7 +742,10 @@ let currentUser = null;
 async function signInWithGoogle() {
   await sb.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: window.location.href }
+    options: {
+      redirectTo: 'https://lodda11.github.io/lodda-dashboard.html',
+      skipBrowserRedirect: false
+    }
   });
 }
 
