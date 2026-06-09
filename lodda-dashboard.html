@@ -733,6 +733,8 @@ async function loadSoberStart() {
 }
 
 // ── AUTH ──────────────────────────────────────────────────
+let currentUser = null;
+
 async function signInWithGoogle() {
   await sb.auth.signInWithOAuth({
     provider: 'google',
@@ -742,23 +744,45 @@ async function signInWithGoogle() {
 
 async function signOut() {
   await sb.auth.signOut();
+  currentUser = null;
+  document.getElementById('auth-overlay').style.display = 'flex';
+  document.getElementById('logout-btn').style.display = 'none';
+  document.querySelectorAll('.page, nav').forEach(el => el.style.display = 'none');
 }
 
 async function initAuth() {
   const { data: { session } } = await sb.auth.getSession();
+
   if (session) {
+    currentUser = session.user;
     document.getElementById('auth-overlay').style.display = 'none';
     document.getElementById('logout-btn').style.display = 'block';
     await initApp();
+  } else {
+    const params = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    if (params.get('code') || hashParams.get('access_token')) {
+      const { data } = await sb.auth.exchangeCodeForSession(window.location.href);
+      if (data?.session) {
+        currentUser = data.session.user;
+        document.getElementById('auth-overlay').style.display = 'none';
+        document.getElementById('logout-btn').style.display = 'block';
+        document.querySelectorAll('.page, nav').forEach(el => el.style.display = '');
+        window.history.replaceState({}, document.title, window.location.pathname);
+        await initApp();
+      }
+    } else {
+      document.querySelectorAll('.page, nav').forEach(el => el.style.display = 'none');
+    }
   }
-  sb.auth.onAuthStateChange(async (_event, session) => {
-    if (session) {
+
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      currentUser = session.user;
       document.getElementById('auth-overlay').style.display = 'none';
       document.getElementById('logout-btn').style.display = 'block';
+      document.querySelectorAll('.page, nav').forEach(el => el.style.display = '');
       await initApp();
-    } else {
-      document.getElementById('auth-overlay').style.display = 'flex';
-      document.getElementById('logout-btn').style.display = 'none';
     }
   });
 }
