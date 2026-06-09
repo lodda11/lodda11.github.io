@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Dashboard"/>
+<meta name="theme-color" content="#0a0a0a"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<link rel="apple-touch-icon" href="icon.png"/>
+<link rel="manifest" href="manifest.json"/>
+<title>Løddas Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --bg: #0a0a0a;
+  --bg2: #111111;
+  --bg3: #181818;
+  --border: #222222;
+  --border2: #2a2a2a;
+  --text: #f0ede8;
+  --muted: #666666;
+  --muted2: #444444;
+  --gold: #c9a84c;
+  --gold2: #e8c97a;
+  --gold-dim: rgba(201,168,76,0.08);
+  --gold-dim2: rgba(201,168,76,0.15);
+  --red: #e05252;
+  --green: #52c97a;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px; -webkit-font-smoothing: antialiased; }
+body { min-height: 100vh; padding-bottom: 80px; }
+
+/* NAV */
+nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(10,10,10,0.95);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  display: flex; justify-content: space-around; padding: 10px 0 max(10px, env(safe-area-inset-bottom));
+}
+.nav-btn {
+  background: none; border: none; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 10px;
+  letter-spacing: 0.06em; text-transform: uppercase; padding: 4px 16px;
+  transition: color 0.2s;
+}
+.nav-btn.active { color: var(--gold); }
+.nav-btn svg { width: 22px; height: 22px; stroke-width: 1.5; }
+
+/* PAGES */
+.page { display: none; padding: 0 20px; animation: fadeIn 0.2s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* TOP BAR */
+.topbar {
+  padding: 56px 0 24px;
+  display: flex; justify-content: space-between; align-items: flex-end;
+}
+.topbar-title { font-family: 'Bebas Neue', sans-serif; font-size: 42px; letter-spacing: 0.04em; line-height: 1; color: var(--text); }
+.topbar-sub { font-size: 12px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+
+/* CARDS */
+.card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 20px; margin-bottom: 12px;
+}
+.card-title {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--muted); margin-bottom: 14px;
+}
+.card-big { font-family: 'Bebas Neue', sans-serif; font-size: 52px; color: var(--text); line-height: 1; }
+.card-big-unit { font-size: 14px; color: var(--muted); font-family: 'DM Sans'; margin-left: 4px; }
+
+/* GRID */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.grid2 .card { margin-bottom: 0; }
+.stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 36px; color: var(--text); line-height: 1; }
+.stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+/* STREAK BAR */
+.streak-row { display: flex; gap: 4px; margin-top: 10px; }
+.streak-dot {
+  flex: 1; height: 4px; border-radius: 2px; background: var(--bg3);
+  transition: background 0.3s;
+}
+.streak-dot.done { background: var(--gold); }
+.streak-dot.partial { background: var(--muted2); }
+
+/* ROUTINE LIST */
+.routine-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 13px 0; border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: opacity 0.15s;
+}
+.routine-item:last-child { border-bottom: none; }
+.routine-check {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 1.5px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all 0.2s;
+}
+.routine-item.done .routine-check { background: var(--gold); border-color: var(--gold); }
+.routine-item.done .routine-check svg { display: block; }
+.routine-check svg { display: none; width: 12px; height: 12px; stroke: #000; stroke-width: 3; }
+.routine-item.done .routine-label { color: var(--muted); text-decoration: line-through; }
+.routine-label { font-size: 14px; color: var(--text); transition: color 0.2s; }
+.routine-tag {
+  margin-left: auto; font-size: 10px; padding: 3px 8px;
+  border-radius: 4px; background: var(--bg3); color: var(--muted);
+  letter-spacing: 0.04em; flex-shrink: 0;
+}
+.routine-tag.fridag { background: var(--gold-dim); color: var(--gold); }
+
+/* PROGRESS BAR */
+.progress-bar-wrap { background: var(--bg3); border-radius: 3px; height: 3px; margin-top: 14px; overflow: hidden; }
+.progress-bar-fill { height: 100%; background: var(--gold); border-radius: 3px; transition: width 0.4s ease; }
+
+/* REWARD CARD */
+.reward-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 20px; margin-bottom: 12px;
+  position: relative; overflow: hidden;
+}
+.reward-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.reward-name { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.05em; color: var(--text); }
+.reward-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.reward-progress { display: flex; align-items: baseline; gap: 6px; margin: 10px 0 8px; }
+.reward-current { font-family: 'Bebas Neue', sans-serif; font-size: 36px; color: var(--gold); }
+.reward-total { font-size: 14px; color: var(--muted); }
+
+/* ALCOHOL STREAK */
+.sober-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 20px; margin-bottom: 12px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.sober-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+.sober-days { font-family: 'Bebas Neue', sans-serif; font-size: 52px; color: var(--green); line-height: 1; }
+.sober-unit { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.sober-badge {
+  width: 56px; height: 56px; border-radius: 50%;
+  border: 1.5px solid var(--green); display: flex; align-items: center; justify-content: center;
+  color: var(--green); font-size: 22px;
+}
+
+/* ECONOMY */
+.input-row { display: flex; gap: 10px; margin-bottom: 10px; }
+.inp {
+  flex: 1; background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-family: 'DM Mono', monospace; font-size: 14px;
+  padding: 12px 14px; outline: none; transition: border-color 0.2s;
+}
+.inp:focus { border-color: var(--gold); }
+.inp::placeholder { color: var(--muted2); }
+.btn {
+  background: var(--gold); color: #000; border: none; border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+  padding: 12px 18px; cursor: pointer; transition: opacity 0.2s; white-space: nowrap;
+}
+.btn:hover { opacity: 0.85; }
+.btn-ghost {
+  background: none; border: 1px solid var(--border2); color: var(--muted);
+  border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 13px;
+  padding: 10px 14px; cursor: pointer; transition: all 0.2s;
+}
+.btn-ghost:hover { border-color: var(--muted); color: var(--text); }
+.log-list { margin-top: 4px; }
+.log-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 11px 0; border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.log-item:last-child { border-bottom: none; }
+.log-date { color: var(--muted); }
+.log-amount { font-family: 'DM Mono', monospace; color: var(--gold); }
+.log-del { background: none; border: none; color: var(--muted2); cursor: pointer; font-size: 16px; padding: 0 0 0 10px; }
+.log-del:hover { color: var(--red); }
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+.row-between { display: flex; justify-content: space-between; align-items: baseline; }
+.label-sm { font-size: 12px; color: var(--muted); }
+.val-sm { font-size: 13px; font-family: 'DM Mono', monospace; color: var(--text); }
+.val-gold { color: var(--gold); }
+
+/* EXPENSE */
+.expense-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+}
+.expense-item:last-child { border-bottom: none; }
+.expense-name { color: var(--text); }
+.expense-amt { font-family: 'DM Mono', monospace; color: var(--muted); }
+
+/* FOOTBALL */
+.kamp-item {
+  padding: 13px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+}
+.kamp-item:last-child { border-bottom: none; }
+.kamp-date { font-size: 11px; color: var(--gold); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
+.kamp-match { color: var(--text); font-weight: 500; }
+.kamp-info { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.badge {
+  display: inline-block; font-size: 10px; padding: 3px 8px;
+  border-radius: 4px; letter-spacing: 0.04em;
+}
+.badge-gold { background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(201,168,76,0.2); }
+.badge-green { background: rgba(82,201,122,0.08); color: var(--green); border: 1px solid rgba(82,201,122,0.2); }
+.badge-muted { background: var(--bg3); color: var(--muted); }
+
+/* HEALTH PLACEHOLDER */
+.placeholder-center {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 50vh; gap: 14px; text-align: center;
+}
+.placeholder-icon { font-size: 48px; opacity: 0.3; }
+.placeholder-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.06em; color: var(--muted); }
+.placeholder-sub { font-size: 13px; color: var(--muted2); max-width: 240px; line-height: 1.6; }
+
+/* SECTION LABEL */
+.section-label {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--muted); margin: 20px 0 10px;
+}
+
+/* HOME QUICK HABITS */
+.habit-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.habit-pill {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 20px; padding: 7px 14px; font-size: 13px; color: var(--muted);
+  cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+}
+.habit-pill.done { background: var(--gold-dim); border-color: rgba(201,168,76,0.3); color: var(--gold); }
+.habit-pill-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.5; }
+
+/* ENERGY BUTTONS */
+.energy-btn {
+  flex:1; background:var(--bg3); border:1px solid var(--border);
+  border-radius:var(--radius-sm); color:var(--muted); font-size:12px;
+  padding:8px 4px; cursor:pointer; transition:all 0.15s; font-family:'DM Sans',sans-serif;
+}
+.energy-btn:hover { border-color:var(--muted2); color:var(--text); }
+.energy-btn.active { background:var(--gold-dim); border-color:rgba(201,168,76,0.4); color:var(--gold); }
+
+/* WEEK DOT */
+.week-dot {
+  aspect-ratio:1; border-radius:6px; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:3px;
+  background:var(--bg3); border:1px solid var(--border);
+  font-size:9px; color:var(--muted); cursor:pointer; transition:all 0.15s; padding:4px 2px;
+}
+.week-dot.today { border-color:var(--gold); color:var(--gold); }
+.week-dot.done { background:var(--gold-dim); border-color:rgba(201,168,76,0.3); }
+.week-dot.done .wd-label { color:var(--gold); }
+.wd-day { font-size:9px; color:inherit; }
+.wd-dot { width:5px; height:5px; border-radius:50%; background:var(--muted2); }
+.week-dot.done .wd-dot { background:var(--gold); }
+.week-dot.today .wd-dot { background:var(--gold); }
+
+/* WHOOP placeholder card */
+.whoop-soon { text-align:center; padding: 40px 20px; }
+
+/* AUTH */
+#auth-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 24px;
+}
+.auth-title { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 0.04em; }
+.auth-sub { font-size: 14px; color: var(--muted); max-width: 280px; text-align: center; line-height: 1.6; }
+.btn-google {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg2); border: 1px solid var(--border2);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+  padding: 14px 24px; cursor: pointer; transition: all 0.2s;
+}
+.btn-google:hover { border-color: var(--gold); background: var(--gold-dim); }
+#logout-btn {
+  position: fixed; top: max(12px, env(safe-area-inset-top)); right: 16px; z-index: 101;
+  display: none;
+}
+</style>
+</head>
+<body>
+
+<div id="auth-overlay">
+  <div class="auth-title">Løddas Dashboard</div>
+  <div class="auth-sub">Logg inn med Google for å synkronisere rutiner, økonomi og trening.</div>
+  <button class="btn-google" onclick="signInWithGoogle()">
+    <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+    Logg inn med Google
+  </button>
+</div>
+<button class="btn-ghost" id="logout-btn" onclick="signOut()">Logg ut</button>
+
+<!-- HOME -->
+<div class="page active" id="page-hjem">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="home-greeting">God morgen</div>
+      <div class="topbar-sub" id="home-date"></div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--gold)" id="home-streak">0</div>
+      <div style="font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase">dager streak</div>
+    </div>
+  </div>
+
+  <!-- Today completion -->
+  <div class="card">
+    <div class="card-title">Dagens fremgang</div>
+    <div style="display:flex;align-items:baseline;gap:6px">
+      <div class="card-big" id="home-pct">0</div>
+      <div class="card-big-unit">%</div>
+    </div>
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="home-bar" style="width:0%"></div></div>
+    <div style="font-size:12px;color:var(--muted);margin-top:10px" id="home-left"></div>
+  </div>
+
+  <!-- Quick habits -->
+  <div class="section-label">Rask avkryssing</div>
+  <div class="card" style="padding:14px 20px">
+    <div class="habit-row" id="home-habits"></div>
+  </div>
+
+  <!-- Sober streak -->
+  <div class="sober-card">
+    <div>
+      <div class="sober-label">Alkoholfri streak</div>
+      <div class="sober-days" id="sober-count">0</div>
+      <div class="sober-unit">dager uten alkohol</div>
+    </div>
+    <div class="sober-badge">&#9679;</div>
+  </div>
+
+  <!-- Stats row -->
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Denne måneden</div>
+      <div class="stat-num" id="home-month-days">0</div>
+      <div class="stat-label">dager 80%+</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Best streak</div>
+      <div class="stat-num" id="home-best-streak">0</div>
+      <div class="stat-label">dager på rad</div>
+    </div>
+  </div>
+</div>
+
+<!-- RUTINER -->
+<div class="page" id="page-rutiner">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Rutiner</div>
+      <div class="topbar-sub" id="rutiner-date"></div>
+    </div>
+    <button class="btn-ghost" onclick="toggleDayType()" id="daytype-btn">Fridag</button>
+  </div>
+
+  <!-- Rewards -->
+  <div class="reward-card" id="reward-caspara">
+    <div class="reward-name">Caspara Tracksuit</div>
+    <div class="reward-meta">14 dager streak &nbsp;·&nbsp; €239 ca.</div>
+    <div class="reward-progress">
+      <div class="reward-current" id="reward-caspara-num">0</div>
+      <div class="reward-total">/ 14 dager</div>
+    </div>
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="reward-caspara-bar" style="width:0%"></div></div>
+  </div>
+  <div class="reward-card" id="reward-scuf">
+    <div class="reward-name">Scuf Omega</div>
+    <div class="reward-meta">30 dager streak &nbsp;·&nbsp; €239.99</div>
+    <div class="reward-progress">
+      <div class="reward-current" id="reward-scuf-num">0</div>
+      <div class="reward-total">/ 30 dager</div>
+    </div>
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="reward-scuf-bar" style="width:0%"></div></div>
+  </div>
+
+  <!-- Routines -->
+  <div class="card">
+    <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+      <span>Dagens rutiner</span>
+      <span id="routine-count" style="font-family:'DM Mono',monospace;color:var(--gold)">0/0</span>
+    </div>
+    <div id="routine-list"></div>
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="routine-bar" style="width:0%"></div></div>
+  </div>
+
+  <!-- Streak history -->
+  <div class="section-label">Siste 14 dager</div>
+  <div class="card">
+    <div class="streak-row" id="streak-history"></div>
+    <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:11px;color:var(--muted)">
+      <span id="streak-start-label"></span>
+      <span>I dag</span>
+    </div>
+  </div>
+</div>
+
+<!-- ØKONOMI -->
+<div class="page" id="page-okonomi">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Økonomi</div>
+      <div class="topbar-sub" id="okonomi-month"></div>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Brutto</div>
+      <div class="stat-num val-gold" id="eco-gross">0</div>
+      <div class="stat-label">kr denne måneden</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Netto</div>
+      <div class="stat-num" id="eco-net">0</div>
+      <div class="stat-label">kr etter skatt</div>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Timer</div>
+      <div class="stat-num" id="eco-hours">0</div>
+      <div class="stat-label">denne måneden</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Dager jobbet</div>
+      <div class="stat-num" id="eco-days">0</div>
+      <div class="stat-label">denne måneden</div>
+    </div>
+  </div>
+
+  <!-- Log work day -->
+  <div class="section-label">Logg arbeidsdag</div>
+  <div class="card">
+    <div class="input-row">
+      <input class="inp" id="eco-hours-inp" type="number" placeholder="Timer" min="1" max="24" step="0.5"/>
+      <input class="inp" id="eco-rate-inp" type="number" placeholder="Kr/t" value="205"/>
+      <button class="btn" onclick="logWorkDay()">+ Legg til</button>
+    </div>
+    <div class="log-list" id="eco-log"></div>
+  </div>
+
+  <!-- Fixed expenses -->
+  <div class="section-label">Faste utgifter</div>
+  <div class="card">
+    <div id="expense-list"></div>
+    <div class="divider"></div>
+    <div class="input-row">
+      <input class="inp" id="exp-name-inp" type="text" placeholder="Utgift"/>
+      <input class="inp" id="exp-amt-inp" type="number" placeholder="Kr/mnd" style="max-width:110px"/>
+      <button class="btn" onclick="addExpense()">+</button>
+    </div>
+    <div class="divider"></div>
+    <div class="row-between">
+      <span class="label-sm">Totalt faste utgifter</span>
+      <span class="val-sm val-gold" id="exp-total">0 kr</span>
+    </div>
+    <div class="row-between" style="margin-top:6px">
+      <span class="label-sm">Netto igjen etter utgifter</span>
+      <span class="val-sm" id="exp-left">0 kr</span>
+    </div>
+  </div>
+</div>
+
+<!-- HELSE -->
+<div class="page" id="page-helse">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Helse</div>
+      <div class="topbar-sub">Recovery & data</div>
+    </div>
+  </div>
+  <div class="placeholder-center">
+    <div class="placeholder-icon">⌚</div>
+    <div class="placeholder-title">Whoop kobles til snart</div>
+    <div class="placeholder-sub">Når du får Whoop-en din legger vi inn HRV, recovery score, søvn og treningsbelastning her.</div>
+  </div>
+</div>
+
+<!-- FOTBALL -->
+<div class="page" id="page-fotball">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Fotball</div>
+      <div class="topbar-sub" id="fotball-fase"></div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase">Neste kamp</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);line-height:1.1" id="fotball-kamp-countdown"></div>
+    </div>
+  </div>
+
+  <!-- Grind progress + stats row -->
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Grind fremgang</div>
+      <div class="stat-num" id="fotball-grind-done">0</div>
+      <div class="stat-label">/ 21 dager fullført</div>
+      <div class="progress-bar-wrap" style="margin-top:10px"><div class="progress-bar-fill" id="fotball-grind-bar" style="width:0%"></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Denne uka</div>
+      <div class="stat-num" id="fotball-week-done">0</div>
+      <div class="stat-label">/ 6 økter fullført</div>
+    </div>
+  </div>
+
+  <!-- Vekt tracker -->
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Kroppsvekt</div>
+      <div style="display:flex;align-items:baseline;gap:4px">
+        <div class="stat-num" id="fotball-weight-now">—</div>
+        <div style="font-size:13px;color:var(--muted)">kg</div>
+      </div>
+      <div class="stat-label">Mål: 72–74 kg</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Endring</div>
+      <div style="display:flex;align-items:baseline;gap:4px">
+        <div class="stat-num" id="fotball-weight-diff">—</div>
+        <div style="font-size:13px;color:var(--muted)" id="fotball-weight-diff-unit">kg</div>
+      </div>
+      <div class="stat-label">siden start</div>
+    </div>
+  </div>
+
+  <!-- Uke-oversikt -->
+  <div class="section-label">Denne uka</div>
+  <div class="card" style="padding:14px 20px">
+    <div id="fotball-week-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px"></div>
+  </div>
+
+  <!-- Day navigator -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 10px">
+    <button class="btn-ghost" style="padding:8px 16px;font-size:18px" onclick="fotballNav(-1)">‹</button>
+    <div style="text-align:center">
+      <div style="font-size:13px;font-weight:500;color:var(--text)" id="fotball-nav-date"></div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px" id="fotball-nav-label"></div>
+    </div>
+    <button class="btn-ghost" style="padding:8px 16px;font-size:18px" onclick="fotballNav(1)">›</button>
+  </div>
+
+  <!-- Session card -->
+  <div class="card">
+    <div class="card-title" id="fotball-session-title">Dagens økt</div>
+    <div id="fotball-session-content"></div>
+  </div>
+
+  <!-- Post-session logging -->
+  <div class="section-label">Logg etter økt</div>
+  <div class="card">
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Energinivå</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px" id="energy-btns">
+      <button class="energy-btn" onclick="setEnergy(1)">😴 1</button>
+      <button class="energy-btn" onclick="setEnergy(2)">😐 2</button>
+      <button class="energy-btn" onclick="setEnergy(3)">🙂 3</button>
+      <button class="energy-btn" onclick="setEnergy(4)">💪 4</button>
+      <button class="energy-btn" onclick="setEnergy(5)">🔥 5</button>
+    </div>
+    <textarea class="inp" id="session-note" placeholder="Notat fra økten — vekter, følelse, hva som fungerte..." style="width:100%;height:72px;resize:none;font-family:'DM Sans',sans-serif;line-height:1.5"></textarea>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <input class="inp" id="weight-inp" type="number" placeholder="Vekt (kg)" step="0.1" style="max-width:130px"/>
+      <button class="btn" style="flex:1" onclick="saveSessionLog()">Lagre</button>
+    </div>
+  </div>
+
+  <!-- Session history -->
+  <div class="section-label">Øktlogg</div>
+  <div class="card">
+    <div id="fotball-session-history"></div>
+  </div>
+</div>
+
+<nav>
+  <button class="nav-btn active" onclick="goTo('hjem',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Hjem
+  </button>
+  <button class="nav-btn" onclick="goTo('rutiner',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+    Rutiner
+  </button>
+  <button class="nav-btn" onclick="goTo('okonomi',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+    Økonomi
+  </button>
+  <button class="nav-btn" onclick="goTo('helse',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Helse
+  </button>
+  <button class="nav-btn" onclick="goTo('fotball',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    Fotball
+  </button>
+</nav>
+
+<script>
+// ── SUPABASE ─────────────────────────────────────────────
+const SUPABASE_URL = 'https://ujjfxyavsvitgugockbm.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqamZ4eWF2c3ZpdGd1Z29ja2JtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMTYwMTAsImV4cCI6MjA5NjU5MjAxMH0.O1IB3m1TGr12WicsDVIs6n5G0qePDC1cesb2Kymvl2s';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+async function getUserId() {
+  const { data: { user } } = await sb.auth.getUser();
+  return user?.id;
+}
+
+async function saveRoutineChecks(date, checks, dayType) {
+  const userId = await getUserId();
+  await sb.from('routine_checks').upsert(
+    { user_id: userId, date, checks, day_type: dayType },
+    { onConflict: 'user_id,date' }
+  );
+}
+
+async function loadAllRoutineChecks() {
+  const { data } = await sb.from('routine_checks').select('date, checks, day_type');
+  return data || [];
+}
+
+async function saveWorkDay(date, hours, rate) {
+  const userId = await getUserId();
+  const { data } = await sb.from('work_days')
+    .insert({ user_id: userId, date, hours, rate })
+    .select('id, date, hours, rate')
+    .single();
+  return data;
+}
+
+async function loadWorkDays() {
+  const { data } = await sb.from('work_days')
+    .select('id, date, hours, rate')
+    .order('date', { ascending: true });
+  return data || [];
+}
+
+async function deleteWorkDay(id) {
+  await sb.from('work_days').delete().eq('id', id);
+}
+
+async function saveExpense(name, amount) {
+  const userId = await getUserId();
+  const { data } = await sb.from('expenses')
+    .insert({ user_id: userId, name, amount })
+    .select('id, name, amount')
+    .single();
+  return { id: data.id, name: data.name, amt: data.amount };
+}
+
+async function loadExpenses() {
+  const { data } = await sb.from('expenses')
+    .select('id, name, amount')
+    .order('created_at', { ascending: true });
+  return (data || []).map(e => ({ id: e.id, name: e.name, amt: e.amount }));
+}
+
+async function deleteExpense(id) {
+  await sb.from('expenses').delete().eq('id', id);
+}
+
+async function saveSessionChecks(date, checks) {
+  const userId = await getUserId();
+  await sb.from('session_checks').upsert(
+    { user_id: userId, date, checks },
+    { onConflict: 'user_id,date' }
+  );
+}
+
+async function loadSessionChecks() {
+  const { data } = await sb.from('session_checks').select('date, checks');
+  return data || [];
+}
+
+async function saveSessionLogDB(date, energy, note, weight) {
+  const userId = await getUserId();
+  const row = { user_id: userId, date };
+  if (energy != null) row.energy = energy;
+  if (note != null) row.note = note;
+  if (weight != null) row.weight = weight;
+  await sb.from('session_logs').upsert(row, { onConflict: 'user_id,date' });
+}
+
+async function loadAllSessionLogs() {
+  const { data } = await sb.from('session_logs').select('date, energy, note, weight');
+  return data || [];
+}
+
+async function loadWeightHistory() {
+  const { data } = await sb.from('weight_history')
+    .select('date, weight')
+    .order('date', { ascending: true });
+  return data || [];
+}
+
+async function saveWeightEntry(date, weight) {
+  const userId = await getUserId();
+  await sb.from('weight_history').upsert(
+    { user_id: userId, date, weight },
+    { onConflict: 'user_id,date' }
+  );
+}
+
+async function saveSoberStart(date) {
+  const userId = await getUserId();
+  await sb.from('user_settings').upsert(
+    { user_id: userId, sober_start: date },
+    { onConflict: 'user_id' }
+  );
+}
+
+async function loadSoberStart() {
+  const { data } = await sb.from('user_settings').select('sober_start').maybeSingle();
+  return data?.sober_start;
+}
+
+// ── AUTH ──────────────────────────────────────────────────
+async function signInWithGoogle() {
+  await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.href }
+  });
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+}
+
+async function initAuth() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    document.getElementById('auth-overlay').style.display = 'none';
+    document.getElementById('logout-btn').style.display = 'block';
+    await initApp();
+  }
+  sb.auth.onAuthStateChange(async (_event, session) => {
+    if (session) {
+      document.getElementById('auth-overlay').style.display = 'none';
+      document.getElementById('logout-btn').style.display = 'block';
+      await initApp();
+    } else {
+      document.getElementById('auth-overlay').style.display = 'flex';
+      document.getElementById('logout-btn').style.display = 'none';
+    }
+  });
+}
+
+async function initApp() {
+  const [routineData, workDays, expenses, sessionChecks, sessionLogs, weightHistory, soberStart] = await Promise.all([
+    loadAllRoutineChecks(),
+    loadWorkDays(),
+    loadExpenses(),
+    loadSessionChecks(),
+    loadAllSessionLogs(),
+    loadWeightHistory(),
+    loadSoberStart()
+  ]);
+
+  state.routines = {};
+  state.dayTypes = {};
+  routineData.forEach(row => {
+    state.routines[row.date] = row.checks || {};
+    state.dayTypes[row.date] = row.day_type || 'jobb';
+  });
+  state.workDays = workDays;
+  state.expenses = expenses;
+  state.sessionChecks = {};
+  sessionChecks.forEach(row => {
+    state.sessionChecks[row.date] = row.checks || {};
+  });
+  state.sessionLogs = {};
+  sessionLogs.forEach(row => {
+    state.sessionLogs[row.date] = { energy: row.energy, note: row.note, weight: row.weight };
+  });
+  state.weightHistory = weightHistory;
+  state.soberStart = soberStart || TODAY;
+
+  renderHome();
+  renderRutiner();
+}
+
+// ── STATE ─────────────────────────────────────────────────
+const TODAY = new Date().toISOString().slice(0,10);
+let state = {
+  routines: {},
+  dayTypes: {},
+  soberStart: TODAY,
+  workDays: [],
+  expenses: [],
+  sessionChecks: {},
+  sessionLogs: {},
+  weightHistory: [],
+};
+
+// ── ROUTINES CONFIG ───────────────────────────────────────
+const ROUTINES_FELLES = [
+  { id: 'wake', label: 'Stå opp uten telefon' },
+  { id: 'breakfast', label: 'Frokost' },
+  { id: 'skincare_am', label: 'Skincare morgen + pusse tenner' },
+  { id: 'supplements', label: 'Supplements' },
+  { id: 'activity', label: 'Minst 30 min aktivitet' },
+  { id: 'work1h', label: 'Minst 1 time AI / Caddy-arbeid' },
+  { id: 'lunch', label: 'Lunsj' },
+  { id: 'dinner', label: 'Middag' },
+  { id: 'skincare_pm', label: 'Skincare kveld + pusse tenner' },
+  { id: 'nodrink', label: 'Ingen alkohol' },
+  { id: 'bed', label: 'I seng til rimelig tid' },
+];
+const ROUTINES_FRIDAG = [
+  { id: 'training', label: 'Full treningsøkt', fridag: true },
+  { id: 'extrawork', label: 'Ekstra AI-arbeid om kvelden', fridag: true },
+];
+const ALL_ROUTINES = [...ROUTINES_FELLES, ...ROUTINES_FRIDAG];
+
+function todayDayType() {
+  return state.dayTypes[TODAY] || 'jobb';
+}
+async function toggleDayType() {
+  const cur = todayDayType();
+  state.dayTypes[TODAY] = cur === 'jobb' ? 'fridag' : 'jobb';
+  await saveRoutineChecks(TODAY, getTodayDone(), state.dayTypes[TODAY]);
+  renderRutiner();
+  renderHome();
+}
+
+function getTodayRoutines() {
+  const type = todayDayType();
+  return type === 'fridag' ? ALL_ROUTINES : ROUTINES_FELLES;
+}
+
+function getTodayDone() {
+  return state.routines[TODAY] || {};
+}
+
+function completionPct(dateStr) {
+  const type = state.dayTypes[dateStr] || 'jobb';
+  const list = type === 'fridag' ? ALL_ROUTINES : ROUTINES_FELLES;
+  const done = state.routines[dateStr] || {};
+  const count = list.filter(r => done[r.id]).length;
+  return Math.round((count / list.length) * 100);
+}
+
+function isGoodDay(dateStr) {
+  return completionPct(dateStr) >= 80;
+}
+
+function calcStreak() {
+  let streak = 0;
+  let d = new Date(TODAY);
+  while (true) {
+    const ds = d.toISOString().slice(0,10);
+    if (ds === TODAY && completionPct(ds) < 80) break;
+    if (ds !== TODAY && !isGoodDay(ds)) break;
+    streak++;
+    d.setDate(d.getDate() - 1);
+    if (streak > 365) break;
+  }
+  return streak;
+}
+
+function calcBestStreak() {
+  let best = 0, cur = 0;
+  for (let i = 90; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const ds = d.toISOString().slice(0,10);
+    if (isGoodDay(ds)) { cur++; best = Math.max(best, cur); } else cur = 0;
+  }
+  return best;
+}
+
+// ── RENDER HOME ───────────────────────────────────────────
+function renderHome() {
+  const h = new Date().getHours();
+  const greet = h < 12 ? 'God morgen' : h < 18 ? 'God ettermiddag' : 'God kveld';
+  document.getElementById('home-greeting').textContent = greet;
+
+  const opts = { weekday:'long', day:'numeric', month:'long' };
+  document.getElementById('home-date').textContent = new Date().toLocaleDateString('nb-NO', opts);
+
+  const pct = completionPct(TODAY);
+  document.getElementById('home-pct').textContent = pct;
+  document.getElementById('home-bar').style.width = pct + '%';
+
+  const routines = getTodayRoutines();
+  const done = getTodayDone();
+  const doneCount = routines.filter(r => done[r.id]).length;
+  const left = routines.length - doneCount;
+  document.getElementById('home-left').textContent = left > 0 ? left + ' rutiner igjen i dag' : 'Alle rutiner fullført i dag 🔥';
+
+  const streak = calcStreak();
+  document.getElementById('home-streak').textContent = streak;
+  document.getElementById('sober-count').textContent = soberDays();
+  document.getElementById('home-best-streak').textContent = calcBestStreak();
+
+  const thisMonth = new Date().toISOString().slice(0,7);
+  let monthGood = 0;
+  for (let i = 0; i < 31; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    if (d.toISOString().slice(0,7) !== thisMonth) break;
+    if (isGoodDay(d.toISOString().slice(0,10))) monthGood++;
+  }
+  document.getElementById('home-month-days').textContent = monthGood;
+
+  // Quick habits
+  const quickList = getTodayRoutines().slice(0, 6);
+  const hEl = document.getElementById('home-habits');
+  hEl.innerHTML = quickList.map(r => {
+    const isDone = done[r.id];
+    return `<div class="habit-pill${isDone ? ' done' : ''}" onclick="quickToggle('${r.id}')">
+      <div class="habit-pill-dot"></div>
+      ${r.label}
+    </div>`;
+  }).join('');
+}
+
+async function quickToggle(id) {
+  const done = getTodayDone();
+  done[id] = !done[id];
+  state.routines[TODAY] = done;
+  await saveRoutineChecks(TODAY, done, todayDayType());
+  renderHome();
+  renderRutiner();
+}
+
+// ── RENDER RUTINER ────────────────────────────────────────
+function renderRutiner() {
+  const type = todayDayType();
+  document.getElementById('daytype-btn').textContent = type === 'jobb' ? 'Jobbdag' : 'Fridag';
+  const opts = { weekday:'long', day:'numeric', month:'long' };
+  document.getElementById('rutiner-date').textContent = new Date().toLocaleDateString('nb-NO', opts);
+
+  const routines = getTodayRoutines();
+  const done = getTodayDone();
+  const doneCount = routines.filter(r => done[r.id]).length;
+  const pct = Math.round((doneCount / routines.length) * 100);
+
+  document.getElementById('routine-count').textContent = doneCount + '/' + routines.length;
+  document.getElementById('routine-bar').style.width = pct + '%';
+
+  document.getElementById('routine-list').innerHTML = routines.map(r => `
+    <div class="routine-item${done[r.id] ? ' done' : ''}" onclick="toggleRoutine('${r.id}')">
+      <div class="routine-check">
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor"><polyline points="2 6 5 9 10 3"/></svg>
+      </div>
+      <span class="routine-label">${r.label}</span>
+      ${r.fridag ? '<span class="routine-tag fridag">Fridag</span>' : ''}
+    </div>
+  `).join('');
+
+  // Streak history 14 days
+  const histEl = document.getElementById('streak-history');
+  const dots = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const ds = d.toISOString().slice(0,10);
+    const cls = ds === TODAY ? (pct >= 80 ? 'done' : '') : isGoodDay(ds) ? 'done' : (state.routines[ds] ? 'partial' : '');
+    dots.push(`<div class="streak-dot ${cls}" title="${ds}"></div>`);
+  }
+  histEl.innerHTML = dots.join('');
+  const d14 = new Date(); d14.setDate(d14.getDate() - 13);
+  document.getElementById('streak-start-label').textContent = d14.toLocaleDateString('nb-NO', { day:'numeric', month:'short' });
+
+  const streak = calcStreak();
+  document.getElementById('reward-caspara-num').textContent = Math.min(streak, 14);
+  document.getElementById('reward-caspara-bar').style.width = Math.min((streak/14)*100, 100) + '%';
+  document.getElementById('reward-scuf-num').textContent = Math.min(streak, 30);
+  document.getElementById('reward-scuf-bar').style.width = Math.min((streak/30)*100, 100) + '%';
+}
+
+async function toggleRoutine(id) {
+  const done = getTodayDone();
+  done[id] = !done[id];
+  state.routines[TODAY] = done;
+  await saveRoutineChecks(TODAY, done, todayDayType());
+  renderRutiner();
+  renderHome();
+}
+
+// ── SOBER ─────────────────────────────────────────────────
+function soberDays() {
+  const start = new Date(state.soberStart);
+  const today = new Date();
+  return Math.floor((today - start) / 86400000);
+}
+
+// ── ECONOMY ───────────────────────────────────────────────
+function renderEconomi() {
+  const month = new Date().toLocaleDateString('nb-NO', { month:'long', year:'numeric' });
+  document.getElementById('okonomi-month').textContent = month;
+
+  const thisMonth = new Date().toISOString().slice(0,7);
+  const monthDays = state.workDays.filter(d => d.date.startsWith(thisMonth));
+  const gross = monthDays.reduce((s,d) => s + d.hours * d.rate, 0);
+  const tax = 0.09; const pension = 0.02;
+  const net = Math.round(gross * (1 - tax - pension));
+
+  document.getElementById('eco-gross').textContent = Math.round(gross).toLocaleString('nb-NO');
+  document.getElementById('eco-net').textContent = net.toLocaleString('nb-NO');
+  document.getElementById('eco-hours').textContent = monthDays.reduce((s,d) => s + d.hours, 0);
+  document.getElementById('eco-days').textContent = monthDays.length;
+
+  const logEl = document.getElementById('eco-log');
+  const recent = [...state.workDays].reverse().slice(0,8);
+  logEl.innerHTML = recent.length ? recent.map(d => {
+    const amt = Math.round(d.hours * d.rate);
+    return `<div class="log-item">
+      <span class="log-date">${d.date} &nbsp; ${d.hours}t × ${d.rate}kr</span>
+      <span style="display:flex;align-items:center;gap:6px">
+        <span class="log-amount">${amt.toLocaleString('nb-NO')} kr</span>
+        <button class="log-del" onclick="delWorkDay('${d.id}')">×</button>
+      </span>
+    </div>`;
+  }).join('') : '<div style="color:var(--muted);font-size:13px;padding:10px 0">Ingen dager logget ennå</div>';
+
+  const totalExp = state.expenses.reduce((s,e) => s + e.amt, 0);
+  document.getElementById('exp-total').textContent = totalExp.toLocaleString('nb-NO') + ' kr';
+  document.getElementById('exp-left').textContent = (net - totalExp).toLocaleString('nb-NO') + ' kr';
+
+  document.getElementById('expense-list').innerHTML = state.expenses.map(e => `
+    <div class="expense-item">
+      <span class="expense-name">${e.name}</span>
+      <span style="display:flex;align-items:center;gap:8px">
+        <span class="expense-amt">${e.amt.toLocaleString('nb-NO')} kr</span>
+        <button class="log-del" onclick="delExpense('${e.id}')">×</button>
+      </span>
+    </div>
+  `).join('');
+}
+
+async function logWorkDay() {
+  const h = parseFloat(document.getElementById('eco-hours-inp').value);
+  const r = parseFloat(document.getElementById('eco-rate-inp').value);
+  if (!h || !r) return;
+  const row = await saveWorkDay(TODAY, h, r);
+  state.workDays.push(row);
+  document.getElementById('eco-hours-inp').value = '';
+  renderEconomi();
+}
+
+async function delWorkDay(id) {
+  await deleteWorkDay(id);
+  state.workDays = state.workDays.filter(d => d.id !== id);
+  renderEconomi();
+}
+
+async function addExpense() {
+  const name = document.getElementById('exp-name-inp').value.trim();
+  const amt = parseFloat(document.getElementById('exp-amt-inp').value);
+  if (!name || !amt) return;
+  const row = await saveExpense(name, amt);
+  state.expenses.push(row);
+  document.getElementById('exp-name-inp').value = '';
+  document.getElementById('exp-amt-inp').value = '';
+  renderEconomi();
+}
+
+async function delExpense(id) {
+  await deleteExpense(id);
+  state.expenses = state.expenses.filter(e => e.id !== id);
+  renderEconomi();
+}
+
+// ── FOOTBALL ─────────────────────────────────────────────
+const PROGRAM = {
+  '2026-06-08': {
+    title: 'Lagtrening',
+    tasks: [
+      { id: 'sprint_mek', label: 'Sprint mechanics (10 min) — A-skip, B-skip, høye kneløp, pogo jumps' },
+      { id: 'lagtrening', label: 'Lagtrening Blåmann FK 18:00–19:00' },
+      { id: 'mat_etter', label: 'Stort måltid innen 60 min etter trening' },
+    ]
+  },
+  '2026-06-09': {
+    title: 'Gym upper A + rolig løp',
+    tasks: [
+      { id: 'bench', label: 'Bench press / DB press — 4 × 6' },
+      { id: 'row', label: 'Barbell row — 4 × 8' },
+      { id: 'ohp', label: 'Overhead press — 3 × 8' },
+      { id: 'chinup', label: 'Weighted chin-ups — 4 × 6' },
+      { id: 'face', label: 'Face pulls — 3 × 15' },
+      { id: 'farmer', label: 'Farmer walks — 3 × 40m' },
+      { id: 'lop', label: 'Rolig løpetur 35–40 min' },
+    ]
+  },
+  '2026-06-10': {
+    title: 'Gym lower A',
+    tasks: [
+      { id: 'squat', label: 'Barbell back squat — 4 × 5, tungt' },
+      { id: 'rdl', label: 'Romanian deadlift — 4 × 8' },
+      { id: 'bss', label: 'Bulgarian split squat — 3 × 8/side' },
+      { id: 'thrust', label: 'Barbell hip thrust — 3 × 10' },
+      { id: 'calf', label: 'Calf raises — 4 × 15' },
+      { id: 'pullup', label: 'Wide-grip pull-ups — 3 × maks (finisher)' },
+    ]
+  },
+  '2026-06-11': {
+    title: 'Gym lower B',
+    tasks: [
+      { id: 'bss2', label: 'Bulgarian split squat — 4 × 8/side' },
+      { id: 'rdl2', label: 'Romanian deadlift — 4 × 8' },
+      { id: 'calf2', label: 'Calf raises — 3 × 15' },
+      { id: 'leg_raise', label: 'Hanging leg raises — 3 × 12' },
+      { id: 'pallof', label: 'Pallof press — 3 × 10/side' },
+      { id: 'banded', label: 'Banded marching — 3 × 20' },
+      { id: 'dbrow', label: 'Dumbbell rows — 3 × 10/side' },
+      { id: 'spress', label: 'Skulderpress — 3 × 10' },
+    ]
+  },
+  '2026-06-12': {
+    title: 'Kamp — vs Ulfstind 3',
+    tasks: [
+      { id: 'frokost', label: 'Frokost 3–4 timer før kamp' },
+      { id: 'snack', label: 'Snack 1–1,5 time før kamp' },
+      { id: 'vann', label: '1,5L vann fra du våkner' },
+      { id: 'warmup', label: 'Aktiv oppvarming 15 min' },
+      { id: 'kamp', label: 'Kamp 19:15' },
+      { id: 'mat_k', label: 'Stort måltid innen 60 min etter kamp' },
+    ]
+  },
+  '2026-06-13': {
+    title: 'Sprint + plyometrics',
+    tasks: [
+      { id: 'wu', label: 'Dynamisk oppvarming 10 min (high knees, butt kicks, A-skips, build-ups)' },
+      { id: 's10', label: '10m sprints — 4 reps, 90 sek pause' },
+      { id: 's20', label: '20m sprints — 4 reps, 90 sek pause' },
+      { id: 's40', label: '40m sprints — 3 reps, 2 min pause' },
+      { id: 'broad', label: 'Broad jumps — 4 × 5' },
+      { id: 'lateral', label: 'Lateral bounds — 3 × 6/side' },
+      { id: 'depth', label: 'Depth jumps — 3 × 5' },
+    ]
+  },
+  '2026-06-14': { title: 'Hvile', tasks: [{ id: 'rest', label: 'Obligatorisk hvile — ingen trening' }] },
+  '2026-06-15': {
+    title: 'Lagtrening',
+    tasks: [
+      { id: 'sprint_mek', label: 'Sprint mechanics (10 min)' },
+      { id: 'lagtrening', label: 'Lagtrening Blåmann FK 18:00–19:00' },
+      { id: 'mat_etter', label: 'Stort måltid innen 60 min' },
+    ]
+  },
+  '2026-06-16': {
+    title: 'Gym lower A + rolig løp',
+    tasks: [
+      { id: 'squat', label: 'Barbell back squat — 4 × 5' },
+      { id: 'rdl', label: 'Romanian deadlift — 4 × 8' },
+      { id: 'bss', label: 'Bulgarian split squat — 3 × 8/side' },
+      { id: 'thrust', label: 'Barbell hip thrust — 3 × 10' },
+      { id: 'calf', label: 'Calf raises — 4 × 15' },
+      { id: 'pullup', label: 'Wide-grip pull-ups — 3 × maks' },
+      { id: 'lop', label: 'Rolig løpetur 35–40 min' },
+    ]
+  },
+  '2026-06-17': {
+    title: 'Gym upper A',
+    tasks: [
+      { id: 'bench', label: 'Bench press / DB press — 4 × 6' },
+      { id: 'row', label: 'Barbell row — 4 × 8' },
+      { id: 'ohp', label: 'Overhead press — 3 × 8' },
+      { id: 'chinup', label: 'Weighted chin-ups — 4 × 6' },
+      { id: 'face', label: 'Face pulls — 3 × 15' },
+      { id: 'farmer', label: 'Farmer walks — 3 × 40m' },
+    ]
+  },
+  '2026-06-18': {
+    title: 'Gym lower B',
+    tasks: [
+      { id: 'bss2', label: 'Bulgarian split squat — 4 × 8/side' },
+      { id: 'rdl2', label: 'Romanian deadlift — 4 × 8' },
+      { id: 'calf2', label: 'Calf raises — 3 × 15' },
+      { id: 'leg_raise', label: 'Hanging leg raises — 3 × 12' },
+      { id: 'pallof', label: 'Pallof press — 3 × 10/side' },
+      { id: 'banded', label: 'Banded marching — 3 × 20' },
+      { id: 'dbrow', label: 'Dumbbell rows — 3 × 10/side' },
+      { id: 'spress', label: 'Skulderpress — 3 × 10' },
+    ]
+  },
+  '2026-06-19': {
+    title: 'Sprint + plyometrics',
+    tasks: [
+      { id: 'wu', label: 'Dynamisk oppvarming 10 min' },
+      { id: 's10', label: '10m sprints — 4 reps, 90 sek pause' },
+      { id: 's20', label: '20m sprints — 4 reps, 90 sek pause' },
+      { id: 's40', label: '40m sprints — 3 reps, 2 min pause' },
+      { id: 'broad', label: 'Broad jumps — 4 × 5' },
+      { id: 'lateral', label: 'Lateral bounds — 3 × 6/side' },
+      { id: 'depth', label: 'Depth jumps — 3 × 5' },
+    ]
+  },
+  '2026-06-20': {
+    title: 'Baneøkt',
+    tasks: [
+      { id: 'mek', label: 'Sprint mechanics 10 min (A-skip, B-skip, pogo jumps)' },
+      { id: 'ts', label: 'Touch & sprint — 12 reps' },
+      { id: 'cut', label: 'Inside cut — 10/fot' },
+      { id: 'croqueta', label: 'La croqueta — sakte til raskere' },
+      { id: 'shuttle', label: 'Shuttle run 25m — 8 reps, 30 sek pause' },
+      { id: 'intervall', label: '6 × 4 min på 85–90%, 2 min pause' },
+    ]
+  },
+  '2026-06-21': { title: 'Hvile', tasks: [{ id: 'rest', label: 'Obligatorisk hvile — ingen trening' }] },
+  '2026-06-22': {
+    title: 'Lagtrening',
+    tasks: [
+      { id: 'sprint_mek', label: 'Sprint mechanics (10 min)' },
+      { id: 'lagtrening', label: 'Lagtrening Blåmann FK 18:00–19:00' },
+      { id: 'mat_etter', label: 'Stort måltid innen 60 min' },
+    ]
+  },
+  '2026-06-23': {
+    title: 'Gym lower A + rolig løp',
+    tasks: [
+      { id: 'squat', label: 'Barbell back squat — 4 × 5' },
+      { id: 'rdl', label: 'Romanian deadlift — 4 × 8' },
+      { id: 'bss', label: 'Bulgarian split squat — 3 × 8/side' },
+      { id: 'thrust', label: 'Barbell hip thrust — 3 × 10' },
+      { id: 'calf', label: 'Calf raises — 4 × 15' },
+      { id: 'pullup', label: 'Wide-grip pull-ups — 3 × maks' },
+      { id: 'lop', label: 'Rolig løpetur 35–40 min' },
+    ]
+  },
+  '2026-06-24': {
+    title: 'Gym upper A',
+    tasks: [
+      { id: 'bench', label: 'Bench press / DB press — 4 × 6' },
+      { id: 'row', label: 'Barbell row — 4 × 8' },
+      { id: 'ohp', label: 'Overhead press — 3 × 8' },
+      { id: 'chinup', label: 'Weighted chin-ups — 4 × 6' },
+      { id: 'face', label: 'Face pulls — 3 × 15' },
+      { id: 'farmer', label: 'Farmer walks — 3 × 40m' },
+    ]
+  },
+  '2026-06-25': {
+    title: 'Gym lower B',
+    tasks: [
+      { id: 'bss2', label: 'Bulgarian split squat — 4 × 8/side' },
+      { id: 'rdl2', label: 'Romanian deadlift — 4 × 8' },
+      { id: 'calf2', label: 'Calf raises — 3 × 15' },
+      { id: 'leg_raise', label: 'Hanging leg raises — 3 × 12' },
+      { id: 'pallof', label: 'Pallof press — 3 × 10/side' },
+      { id: 'banded', label: 'Banded marching — 3 × 20' },
+      { id: 'dbrow', label: 'Dumbbell rows — 3 × 10/side' },
+      { id: 'spress', label: 'Skulderpress — 3 × 10' },
+    ]
+  },
+  '2026-06-26': {
+    title: 'Sprint + plyometrics',
+    tasks: [
+      { id: 'wu', label: 'Dynamisk oppvarming 10 min' },
+      { id: 's10', label: '10m sprints — 4 reps, 90 sek pause' },
+      { id: 's20', label: '20m sprints — 4 reps, 90 sek pause' },
+      { id: 's40', label: '40m sprints — 3 reps, 2 min pause' },
+      { id: 'broad', label: 'Broad jumps — 4 × 5' },
+      { id: 'lateral', label: 'Lateral bounds — 3 × 6/side' },
+      { id: 'depth', label: 'Depth jumps — 3 × 5' },
+    ]
+  },
+  '2026-06-27': {
+    title: 'Baneøkt',
+    tasks: [
+      { id: 'mek', label: 'Sprint mechanics 10 min' },
+      { id: 'ts', label: 'Touch & sprint — 12 reps' },
+      { id: 'cut', label: 'Inside cut — 10/fot' },
+      { id: 'croqueta', label: 'La croqueta' },
+      { id: 'shuttle', label: 'Shuttle run 25m — 8 reps, 30 sek pause' },
+      { id: 'intervall', label: '6 × 4 min på 85–90%, 2 min pause' },
+    ]
+  },
+  '2026-06-28': { title: 'Hvile', tasks: [{ id: 'rest', label: 'Obligatorisk hvile — ingen trening' }] },
+};
+
+const NEXT_KAMP = '2026-06-12';
+let fotballOffset = 0;
+let selectedEnergy = 0;
+
+function fotballDateStr(offset) {
+  const d = new Date(); d.setDate(d.getDate() + offset);
+  return d.toISOString().slice(0,10);
+}
+
+function fotballNav(dir) { fotballOffset += dir; renderFotball(); }
+
+function fotballJumpTo(dateStr) {
+  const diff = Math.ceil((new Date(dateStr) - new Date(TODAY)) / 86400000);
+  fotballOffset = diff;
+  renderFotball();
+  document.getElementById('fotball-session-title').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+async function toggleFotballTask(dateStr, taskId) {
+  const done = state.sessionChecks[dateStr] || {};
+  done[taskId] = !done[taskId];
+  state.sessionChecks[dateStr] = done;
+  await saveSessionChecks(dateStr, done);
+  renderFotball();
+}
+
+async function setEnergy(val) {
+  const dateStr = fotballDateStr(fotballOffset);
+  const log = state.sessionLogs[dateStr] || {};
+  log.energy = val;
+  state.sessionLogs[dateStr] = log;
+  await saveSessionLogDB(dateStr, val, log.note || null, log.weight || null);
+  renderEnergyBtns(val);
+}
+
+function renderEnergyBtns(val) {
+  document.querySelectorAll('.energy-btn').forEach((b,i) => b.classList.toggle('active', i+1 === val));
+}
+
+async function saveSessionLog() {
+  const dateStr = fotballDateStr(fotballOffset);
+  const note = document.getElementById('session-note').value.trim();
+  const weight = parseFloat(document.getElementById('weight-inp').value);
+  const log = state.sessionLogs[dateStr] || {};
+  if (note) log.note = note;
+  if (!isNaN(weight)) {
+    log.weight = weight;
+    const ex = state.weightHistory.findIndex(w => w.date === dateStr);
+    if (ex >= 0) state.weightHistory[ex].weight = weight;
+    else state.weightHistory.push({ date: dateStr, weight });
+    state.weightHistory.sort((a, b) => a.date.localeCompare(b.date));
+    await saveWeightEntry(dateStr, weight);
+  }
+  state.sessionLogs[dateStr] = log;
+  await saveSessionLogDB(dateStr, log.energy || null, log.note || null, log.weight || null);
+  document.getElementById('session-note').value = '';
+  document.getElementById('weight-inp').value = '';
+  renderFotball();
+}
+
+function isDayDone(dateStr) {
+  const session = PROGRAM[dateStr];
+  if (!session) return false;
+  const done = state.sessionChecks[dateStr] || {};
+  return session.tasks.filter(t => done[t.id]).length / session.tasks.length >= 0.8;
+}
+
+function renderFotball() {
+  const dateStr = fotballDateStr(fotballOffset);
+  const d = new Date(dateStr + 'T12:00:00');
+  const fase = dateStr <= '2026-06-11' ? 'Sesong' : dateStr <= '2026-06-28' ? 'Grind mode' : 'Sommergrindet';
+  document.getElementById('fotball-fase').textContent = 'Blåmann FK · ' + fase;
+
+  // Kamp countdown
+  const kampDiff = Math.ceil((new Date(NEXT_KAMP) - new Date(TODAY)) / 86400000);
+  const cdEl = document.getElementById('fotball-kamp-countdown');
+  cdEl.textContent = kampDiff > 0 ? kampDiff + ' dager' : kampDiff === 0 ? 'I dag!' : 'Spilt';
+
+  // Grind stats
+  const grindDates = Object.keys(PROGRAM).filter(d => d >= '2026-06-08' && d <= '2026-06-28');
+  const grindDone = grindDates.filter(d => isDayDone(d)).length;
+  document.getElementById('fotball-grind-done').textContent = grindDone;
+  document.getElementById('fotball-grind-bar').style.width = Math.round((grindDone/21)*100) + '%';
+
+  // Week done
+  const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
+  let weekDone = 0;
+  for (let i = 0; i < 6; i++) {
+    const wd = new Date(weekStart); wd.setDate(wd.getDate() + i);
+    if (isDayDone(wd.toISOString().slice(0,10))) weekDone++;
+  }
+  document.getElementById('fotball-week-done').textContent = weekDone;
+
+  // Weight
+  const wh = state.weightHistory;
+  if (wh.length > 0) {
+    const latest = wh[wh.length - 1].weight;
+    const diff = Math.round((latest - wh[0].weight) * 10) / 10;
+    document.getElementById('fotball-weight-now').textContent = latest;
+    const diffEl = document.getElementById('fotball-weight-diff');
+    diffEl.textContent = (diff >= 0 ? '+' : '') + diff;
+    diffEl.style.color = diff >= 0 ? 'var(--green)' : 'var(--red)';
+  }
+
+  // Week grid
+  const dayLabels = ['Man','Tir','Ons','Tor','Fre','Lør','Søn'];
+  document.getElementById('fotball-week-grid').innerHTML = dayLabels.map((day, i) => {
+    const wd = new Date(weekStart); wd.setDate(wd.getDate() + i);
+    const ds = wd.toISOString().slice(0,10);
+    const isToday = ds === TODAY;
+    const done = isDayDone(ds);
+    const hasProg = !!PROGRAM[ds];
+    return `<div class="week-dot${isToday?' today':''}${done?' done':''}" onclick="fotballJumpTo('${ds}')">
+      <div class="wd-day">${day}</div>
+      <div class="wd-dot"></div>
+      <div style="font-size:8px;color:${hasProg?'inherit':'var(--muted2)'}">${hasProg?(done?'✓':'·'):'—'}</div>
+    </div>`;
+  }).join('');
+
+  // Day navigator
+  const dayName = d.toLocaleDateString('nb-NO', { weekday:'long', day:'numeric', month:'long' });
+  document.getElementById('fotball-nav-date').textContent = dayName.charAt(0).toUpperCase() + dayName.slice(1);
+  document.getElementById('fotball-nav-label').textContent = fotballOffset === 0 ? 'I dag' : fotballOffset < 0 ? Math.abs(fotballOffset) + ' dager siden' : 'Om ' + fotballOffset + ' dager';
+
+  // Session
+  const session = PROGRAM[dateStr];
+  const titleEl = document.getElementById('fotball-session-title');
+  const contentEl = document.getElementById('fotball-session-content');
+  if (!session) {
+    titleEl.textContent = 'Ingen økt';
+    contentEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:6px 0">Ingen økt planlagt denne dagen.</div>';
+  } else {
+    titleEl.textContent = session.title;
+    const done = state.sessionChecks[dateStr] || {};
+    const doneCount = session.tasks.filter(t => done[t.id]).length;
+    const pct = Math.round((doneCount / session.tasks.length) * 100);
+    contentEl.innerHTML = session.tasks.map(t => `
+      <div class="routine-item${done[t.id]?' done':''}" onclick="toggleFotballTask('${dateStr}','${t.id}')">
+        <div class="routine-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor"><polyline points="2 6 5 9 10 3"/></svg></div>
+        <span class="routine-label" style="font-size:13px">${t.label}</span>
+      </div>`).join('') +
+      `<div class="progress-bar-wrap" style="margin-top:14px"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;text-align:right">${doneCount}/${session.tasks.length} fullført</div>`;
+  }
+
+  // Energy + note restore
+  const curLog = state.sessionLogs[dateStr] || {};
+  renderEnergyBtns(curLog.energy || 0);
+  document.getElementById('session-note').value = curLog.note || '';
+
+  // History
+  const histEl = document.getElementById('fotball-session-history');
+  const allLogs = grindDates.map(ds => ({ date: ds, ...(state.sessionLogs[ds] || {}) }))
+    .filter(l => l.note || l.energy || l.weight).reverse();
+  const energyLabels = ['','😴','😐','🙂','💪','🔥'];
+  histEl.innerHTML = allLogs.length === 0
+    ? '<div style="color:var(--muted);font-size:13px;padding:6px 0">Ingen logger ennå</div>'
+    : allLogs.slice(0,8).map(l => `
+      <div class="log-item" style="flex-direction:column;align-items:flex-start;gap:4px;padding:12px 0">
+        <div style="display:flex;justify-content:space-between;width:100%">
+          <span class="log-date">${l.date}</span>
+          <span style="font-size:14px">${l.energy ? energyLabels[l.energy] : ''} ${l.weight ? l.weight + ' kg' : ''}</span>
+        </div>
+        ${l.note ? `<div style="font-size:13px;color:var(--text)">${l.note}</div>` : ''}
+      </div>`).join('');
+}
+
+// ── NAV ───────────────────────────────────────────────────
+function goTo(page, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo(0, 0);
+  if (page === 'okonomi') renderEconomi();
+  if (page === 'fotball') renderFotball();
+}
+
+// ── INIT ──────────────────────────────────────────────────
+initAuth();
+</script>
+</body>
+</html>
