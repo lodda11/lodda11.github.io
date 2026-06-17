@@ -469,15 +469,59 @@ nav { padding: 8px 0 max(8px, env(safe-area-inset-bottom)); }
 }
 .kriger-hero {
   background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 20px 16px 16px; margin-bottom: 12px; text-align: center; position: relative; overflow: hidden;
+  padding: 16px 14px 16px; margin-bottom: 12px; text-align: center; position: relative; overflow: hidden;
 }
-.kriger-hero.tired { opacity: 0.75; }
-.kriger-hero.charged { box-shadow: 0 0 40px rgba(201,168,76,0.12); border-color: rgba(201,168,76,0.3); }
-.kriger-svg-wrap {
-  width: 100%; max-width: 220px; margin: 0 auto; transition: transform 0.6s ease, filter 0.5s ease;
+.kriger-image-stage {
+  position: relative; width: 100%; max-width: 100%; margin: 0 auto 10px;
+  border-radius: var(--radius); overflow: visible;
 }
-.kriger-svg-wrap.tired { transform: scale(0.96) translateY(4px); filter: saturate(0.5) brightness(0.7); }
-.kriger-svg-wrap.charged { filter: drop-shadow(0 0 20px rgba(201,168,76,0.45)); }
+.kriger-image-glow {
+  position: absolute; inset: -6px; border-radius: calc(var(--radius) + 2px);
+  pointer-events: none; z-index: 0; opacity: 1;
+  transition: box-shadow 0.7s ease, opacity 0.7s ease;
+}
+.kriger-hero-img {
+  position: relative; z-index: 1; width: 100%; height: auto; display: block;
+  border-radius: var(--radius); object-fit: cover;
+  transition: filter 0.7s ease, opacity 0.5s ease, transform 0.7s ease;
+}
+.kriger-image-stage.recovery-high .kriger-image-glow {
+  box-shadow: 0 0 45px rgba(201,168,76,0.5), 0 0 90px rgba(201,168,76,0.18);
+  animation: krigerGoldPulse 3s ease-in-out infinite;
+}
+.kriger-image-stage.recovery-high .kriger-hero-img {
+  animation: krigerBreathe 4.5s ease-in-out infinite;
+  filter: brightness(1.08) saturate(1.08);
+}
+.kriger-image-stage.recovery-medium .kriger-image-glow {
+  box-shadow: 0 0 28px rgba(201,168,76,0.18);
+}
+.kriger-image-stage.recovery-medium .kriger-hero-img {
+  filter: brightness(1) saturate(1);
+}
+.kriger-image-stage.recovery-low .kriger-image-glow {
+  box-shadow: 0 0 18px rgba(80,80,80,0.12);
+  animation: krigerFaintPulse 5s ease-in-out infinite;
+}
+.kriger-image-stage.recovery-low .kriger-hero-img {
+  filter: brightness(0.72) saturate(0.55);
+  transform: scale(0.99);
+}
+.kriger-image-stage.recovery-none .kriger-image-glow {
+  box-shadow: 0 0 22px rgba(201,168,76,0.1);
+}
+@keyframes krigerBreathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.012); }
+}
+@keyframes krigerGoldPulse {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 1; }
+}
+@keyframes krigerFaintPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.75; }
+}
 .kriger-level-row {
   display: flex; align-items: baseline; justify-content: center; gap: 10px; margin-top: 12px;
 }
@@ -563,26 +607,75 @@ nav { padding: 8px 0 max(8px, env(safe-area-inset-bottom)); }
 }
 #kriger-levelup-overlay {
   display: none; position: fixed; inset: 0; z-index: 400;
-  background: rgba(0,0,0,0.88); backdrop-filter: blur(12px);
-  align-items: center; justify-content: center; flex-direction: column; gap: 16px;
-  animation: krigerFadeIn 0.4s ease;
+  background: rgba(0,0,0,0.92); backdrop-filter: blur(14px);
+  align-items: center; justify-content: center; flex-direction: column; gap: 12px;
 }
-#kriger-levelup-overlay.show { display: flex; }
+#kriger-levelup-overlay.show { display: flex; animation: krigerFadeIn 0.35s ease; }
+.kriger-levelup-scene {
+  position: relative; width: min(88vw, 340px); aspect-ratio: 3/4;
+  display: flex; align-items: center; justify-content: center; margin-bottom: 8px;
+}
+.kriger-levelup-burst {
+  position: absolute; inset: -20%; border-radius: 50%; pointer-events: none; opacity: 0;
+  background: radial-gradient(circle, rgba(201,168,76,0.55) 0%, rgba(201,168,76,0.15) 35%, transparent 70%);
+}
+#kriger-levelup-overlay.animating .kriger-levelup-burst {
+  animation: krigerBurst 1.4s ease-out forwards;
+}
+.kriger-levelup-img-stack {
+  position: relative; width: 100%; height: 100%; border-radius: var(--radius); overflow: hidden;
+}
+.kriger-levelup-img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  border-radius: var(--radius); opacity: 0;
+}
+.kriger-levelup-img.old { opacity: 1; z-index: 1; }
+#kriger-levelup-overlay.animating .kriger-levelup-img.old {
+  animation: krigerImgOut 0.7s ease forwards;
+}
+#kriger-levelup-overlay.animating .kriger-levelup-img.new {
+  animation: krigerImgIn 1s ease 0.55s forwards;
+}
+@keyframes krigerBurst {
+  0% { opacity: 0; transform: scale(0.4); }
+  30% { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+@keyframes krigerImgOut {
+  0% { opacity: 1; filter: brightness(1); }
+  100% { opacity: 0; filter: brightness(1.4); transform: scale(1.05); }
+}
+@keyframes krigerImgIn {
+  0% { opacity: 0; filter: brightness(1.5) saturate(1.2); transform: scale(0.96); }
+  60% { opacity: 1; filter: brightness(1.15); }
+  100% { opacity: 1; filter: brightness(1); transform: scale(1); }
+}
 @keyframes krigerFadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes krigerPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 @keyframes krigerGlow { 0%,100% { text-shadow: 0 0 20px rgba(201,168,76,0.5); } 50% { text-shadow: 0 0 60px rgba(201,168,76,0.9); } }
 .kriger-levelup-text {
   font-family: 'Bebas Neue', sans-serif; font-size: 56px; color: var(--gold);
   letter-spacing: 0.08em; animation: krigerGlow 1.5s ease infinite;
+  opacity: 0;
 }
+#kriger-levelup-overlay.animating .kriger-levelup-text {
+  animation: krigerGlow 1.5s ease infinite, krigerTextIn 0.6s ease 0.7s forwards;
+}
+@keyframes krigerTextIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 .kriger-levelup-num {
   font-family: 'Bebas Neue', sans-serif; font-size: 80px; color: var(--gold2);
-  animation: krigerPulse 1.2s ease infinite;
+  line-height: 1; opacity: 0;
+}
+#kriger-levelup-overlay.animating .kriger-levelup-num {
+  animation: krigerPulse 1.2s ease 0.9s infinite, krigerTextIn 0.5s ease 0.85s forwards;
 }
 .kriger-levelup-dismiss {
-  margin-top: 20px; background: none; border: 1px solid rgba(201,168,76,0.4);
+  margin-top: 12px; background: none; border: 1px solid rgba(201,168,76,0.4);
   color: var(--gold); border-radius: var(--radius-sm); padding: 12px 28px;
-  font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; opacity: 0;
+}
+#kriger-levelup-overlay.animating .kriger-levelup-dismiss {
+  animation: krigerTextIn 0.5s ease 1.2s forwards;
 }
 
 /* AUTH */
@@ -1053,7 +1146,10 @@ nav { padding: 8px 0 max(8px, env(safe-area-inset-bottom)); }
   </div>
 
   <div class="kriger-hero" id="kriger-hero">
-    <div class="kriger-svg-wrap" id="kriger-svg-wrap"></div>
+    <div class="kriger-image-stage recovery-none" id="kriger-image-stage">
+      <div class="kriger-image-glow" id="kriger-image-glow"></div>
+      <img class="kriger-hero-img" id="kriger-hero-img" src="" alt="Krigerens reise" loading="eager"/>
+    </div>
     <div class="kriger-level-row">
       <div class="kriger-level" id="kriger-level">1</div>
       <div class="kriger-level-sub">Level</div>
@@ -1107,6 +1203,13 @@ nav { padding: 8px 0 max(8px, env(safe-area-inset-bottom)); }
 </div>
 
 <div id="kriger-levelup-overlay" onclick="dismissLevelUp()">
+  <div class="kriger-levelup-scene">
+    <div class="kriger-levelup-burst"></div>
+    <div class="kriger-levelup-img-stack">
+      <img class="kriger-levelup-img old" id="kriger-levelup-old" alt="" />
+      <img class="kriger-levelup-img new" id="kriger-levelup-new" alt="" />
+    </div>
+  </div>
   <div class="kriger-levelup-text">LEVEL UP</div>
   <div class="kriger-levelup-num" id="kriger-levelup-num">2</div>
   <button type="button" class="kriger-levelup-dismiss" onclick="dismissLevelUp(event)">Fortsett</button>
@@ -3345,162 +3448,55 @@ function detectWarriorBadges(stats) {
   return [...unlocked];
 }
 
-function getWarriorTier(level) {
-  if (level >= 20) return 4;
-  if (level >= 10) return 3;
-  if (level >= 5) return 2;
-  return 1;
+const HERO_LEVEL_MAX_IMAGE = 10;
+const heroImagePreloaded = new Set();
+
+function getHeroImageUrl(imageLevel) {
+  return encodeURI(`hero level/level ${imageLevel}.jpeg`);
 }
 
-function renderAuraSVG(auraId, charged) {
-  const gold = '#c9a84c';
-  const goldLight = '#e8c97a';
-  if (auraId === 'aura_none') return '';
-  if (auraId === 'aura_gold') return `
-    <circle cx="100" cy="130" r="88" fill="none" stroke="${gold}" stroke-width="1.2" opacity="0.2">
-      <animate attributeName="opacity" values="0.12;0.28;0.12" dur="3s" repeatCount="indefinite"/>
-    </circle>`;
-  if (auraId === 'aura_fire') return `
-    <circle cx="100" cy="130" r="92" fill="#e05252" opacity="0.06"/>
-    <circle cx="100" cy="130" r="78" fill="none" stroke="#e87a52" stroke-width="1.5" opacity="0.25">
-      <animate attributeName="r" values="74;82;74" dur="2.5s" repeatCount="indefinite"/>
-    </circle>`;
-  if (auraId === 'aura_storm') return `
-    <circle cx="100" cy="130" r="90" fill="#6b8cff" opacity="0.05"/>
-    <circle cx="100" cy="130" r="80" fill="none" stroke="#8ba4ff" stroke-width="1" opacity="0.2">
-      <animate attributeName="opacity" values="0.1;0.35;0.1" dur="1.8s" repeatCount="indefinite"/>
-    </circle>`;
-  if (auraId === 'aura_divine') return `
-    <circle cx="100" cy="130" r="95" fill="${gold}" opacity="0.08"/>
-    <circle cx="100" cy="130" r="85" fill="none" stroke="${goldLight}" stroke-width="2" opacity="0.35">
-      <animate attributeName="r" values="82;94;82" dur="3s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="100" cy="130" r="70" fill="none" stroke="${gold}" stroke-width="0.8" opacity="0.2"/>`;
-  return '';
+function getHeroImageLevelForUser(userLevel) {
+  const capped = Math.min(Math.max(1, userLevel), HERO_LEVEL_MAX_IMAGE);
+  return capped;
 }
 
-function renderCompanionSVG(companionId, bodyY) {
-  if (companionId === 'companion_none') return '';
-  if (companionId === 'companion_wolf') return `
-    <g opacity="0.85">
-      <ellipse cx="38" cy="${200 + bodyY}" rx="14" ry="8" fill="#333" stroke="#666" stroke-width="0.8"/>
-      <circle cx="28" cy="${192 + bodyY}" r="7" fill="#444" stroke="#666" stroke-width="0.8"/>
-      <polygon points="22,${190 + bodyY} 18,${186 + bodyY} 24,${188 + bodyY}" fill="#555"/>
-      <line x1="32" y1="${206 + bodyY}" x2="30" y2="${214 + bodyY}" stroke="#555" stroke-width="1.5"/>
-      <line x1="42" y1="${206 + bodyY}" x2="44" y2="${214 + bodyY}" stroke="#555" stroke-width="1.5"/>
-    </g>`;
-  if (companionId === 'companion_dragon') return `
-    <g opacity="0.9">
-      <ellipse cx="34" cy="${198 + bodyY}" rx="18" ry="10" fill="#1a1510" stroke="#c9a84c" stroke-width="1"/>
-      <path d="M18 ${195 + bodyY} Q10 ${180 + bodyY} 20 ${175 + bodyY} Q28 ${170 + bodyY} 32 ${182 + bodyY}" fill="none" stroke="#c9a84c" stroke-width="1" opacity="0.6"/>
-      <circle cx="22" cy="${190 + bodyY}" r="5" fill="#c9a84c" opacity="0.5"/>
-      <path d="M46 ${192 + bodyY} L54 ${185 + bodyY} L50 ${198 + bodyY} Z" fill="#333" stroke="#c9a84c" stroke-width="0.6"/>
-    </g>`;
-  return '';
-}
-
-function renderArmorSVG(armorId, tier, bodyY, gold, muted, dark) {
-  if (armorId === 'armor_leather') return `
-    <rect x="78" y="${95 + bodyY}" width="44" height="55" rx="4" fill="#3d2e1f" stroke="#8b6914" stroke-width="1.5"/>
-    <line x1="88" y1="${105 + bodyY}" x2="112" y2="${105 + bodyY}" stroke="#5c4033" stroke-width="0.8" opacity="0.6"/>`;
-  if (armorId === 'armor_chainmail') return `
-    <rect x="78" y="${95 + bodyY}" width="44" height="55" rx="4" fill="#2a2d32" stroke="#8a9099" stroke-width="1.5"/>
-    ${[0,1,2,3,4].map(i => `<line x1="82" y1="${102 + i*10 + bodyY}" x2="118" y2="${102 + i*10 + bodyY}" stroke="#6a7078" stroke-width="0.5" opacity="0.5"/>`).join('')}
-    ${[0,1,2,3].map(i => `<line x1="90" y1="${98 + bodyY}" x2="90" y2="${148 + bodyY}" stroke="#6a7078" stroke-width="0.5" opacity="0.35"/>`).join('')}`;
-  if (armorId === 'armor_plate') return `
-    <rect x="76" y="${93 + bodyY}" width="48" height="58" rx="5" fill="${dark}" stroke="${gold}" stroke-width="2"/>
-    <rect x="84" y="${100 + bodyY}" width="32" height="20" rx="2" fill="none" stroke="${gold}" stroke-width="0.8" opacity="0.5"/>
-    <line x1="100" y1="${100 + bodyY}" x2="100" y2="${148 + bodyY}" stroke="${gold}" stroke-width="1" opacity="0.4"/>`;
-  if (armorId === 'armor_dragon') return `
-    <rect x="74" y="${91 + bodyY}" width="52" height="60" rx="6" fill="#1a1210" stroke="${gold}" stroke-width="2"/>
-    <path d="M82 ${100 + bodyY} Q100 ${95 + bodyY} 118 ${100 + bodyY} Q100 ${108 + bodyY} 82 ${100 + bodyY}" fill="${gold}" opacity="0.15"/>
-    <path d="M80 ${120 + bodyY} Q100 ${115 + bodyY} 120 ${120 + bodyY}" fill="none" stroke="${gold}" stroke-width="0.6" opacity="0.4"/>
-    <path d="M80 ${135 + bodyY} Q100 ${130 + bodyY} 120 ${135 + bodyY}" fill="none" stroke="${gold}" stroke-width="0.6" opacity="0.4"/>`;
-  if (tier >= 2) return `
-    <rect x="78" y="${95 + bodyY}" width="44" height="55" rx="4" fill="${dark}" stroke="${gold}" stroke-width="1.5"/>
-    <line x1="100" y1="${100 + bodyY}" x2="100" y2="${145 + bodyY}" stroke="${gold}" stroke-width="0.8" opacity="0.5"/>`;
-  return `<rect x="82" y="${100 + bodyY}" width="36" height="48" rx="3" fill="${dark}" stroke="${muted}" stroke-width="1.2"/>`;
-}
-
-function renderSwordSVG(swordId, tier, swordY, gold, goldLight) {
-  const len = tier >= 3 ? 90 : tier >= 2 ? 75 : 55;
-  let color = gold;
-  let width = tier >= 2 ? 3.5 : 2.5;
-  let glow = '';
-  let extra = '';
-
-  if (swordId === 'sword_bronze') { color = '#cd7f32'; width = 3; }
-  if (swordId === 'sword_steel') { color = '#b8c0cc'; width = 3.5; }
-  if (swordId === 'sword_flaming') {
-    color = '#e87a52'; width = 4; glow = 'filter="url(#wGlow)"';
-    extra = `<line x1="130" y1="${swordY}" x2="${130 + len * 0.7}" y2="${swordY - len * 0.7}" stroke="#e05252" stroke-width="6" stroke-linecap="round" opacity="0.25"/>`;
+function preloadHeroImages() {
+  for (let i = 1; i <= HERO_LEVEL_MAX_IMAGE; i++) {
+    if (heroImagePreloaded.has(i)) continue;
+    const img = new Image();
+    img.src = getHeroImageUrl(i);
+    heroImagePreloaded.add(i);
   }
-  if (swordId === 'sword_legendary') {
-    color = goldLight; width = 4.5; glow = 'filter="url(#wGlow)"';
-    extra = `<line x1="130" y1="${swordY}" x2="${130 + len * 0.7}" y2="${swordY - len * 0.7}" stroke="${gold}" stroke-width="8" stroke-linecap="round" opacity="0.2"/>`;
-  } else if (tier >= 3 && swordId === 'sword_short') {
-    color = goldLight; glow = 'filter="url(#wGlow)"';
-  }
-
-  const bladeLen = swordId === 'sword_legendary' ? 105 : swordId === 'sword_steel' ? 85 : len;
-  return `${extra}<g ${glow}>
-    <line x1="130" y1="${swordY}" x2="${130 + bladeLen * 0.7}" y2="${swordY - bladeLen * 0.7}"
-      stroke="${color}" stroke-width="${width}" stroke-linecap="round"/>
-    <rect x="125" y="${swordY - 4}" width="10" height="8" rx="1" fill="${gold}" opacity="0.8"/>
-  </g>`;
 }
 
-function renderWarriorSVG(level, recoveryToday, cosmetics) {
-  const tier = getWarriorTier(level);
-  const gold = '#c9a84c';
-  const goldLight = '#e8c97a';
-  const dark = '#111';
-  const muted = '#333';
-  const charged = recoveryToday != null && recoveryToday > 66;
-  const tired = recoveryToday != null && recoveryToday < 34;
-  const equipped = cosmetics?.equipped || WARRIOR_COSMETIC_DEFAULTS.equipped;
+function getRecoveryVisualState(recovery) {
+  if (recovery == null) return 'recovery-none';
+  if (recovery > 66) return 'recovery-high';
+  if (recovery >= 34) return 'recovery-medium';
+  return 'recovery-low';
+}
 
-  const swordY = tired ? 118 : 108;
-  const bodyY = tired ? 8 : 0;
-  const headY = tired ? 6 : 0;
+function setHeroImage(imgEl, userLevel) {
+  if (!imgEl) return;
+  const imageLevel = getHeroImageLevelForUser(userLevel);
+  const url = getHeroImageUrl(imageLevel);
+  if (imgEl.dataset.imageLevel !== String(imageLevel)) {
+    imgEl.dataset.imageLevel = imageLevel;
+    imgEl.src = url;
+  }
+}
 
-  const tierAura = tier >= 4 && equipped.aura === 'aura_none' ? `
-    <circle cx="100" cy="130" r="95" fill="none" stroke="${gold}" stroke-width="1.5" opacity="0.25">
-      <animate attributeName="r" values="90;98;90" dur="3s" repeatCount="indefinite"/>
-    </circle>` : '';
+function applyHeroRecoveryEffects(recovery) {
+  const stage = document.getElementById('kriger-image-stage');
+  if (!stage) return;
+  stage.classList.remove('recovery-high', 'recovery-medium', 'recovery-low', 'recovery-none');
+  stage.classList.add(getRecoveryVisualState(recovery));
+}
 
-  const glowDef = (tier >= 3 || equipped.sword === 'sword_flaming' || equipped.sword === 'sword_legendary') ? `
-    <defs>
-      <filter id="wGlow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-    </defs>` : '';
-
-  const cape = tier >= 2 ? `
-    <path d="M72 ${118 + bodyY} Q55 160 50 220 Q100 210 150 220 Q145 160 128 ${118 + bodyY} Z"
-      fill="${muted}" stroke="${gold}" stroke-width="0.8" opacity="0.7"/>` : '';
-
-  const helmet = tier >= 3
-    ? `<ellipse cx="100" cy="${62 + headY}" rx="22" ry="20" fill="${dark}" stroke="${gold}" stroke-width="1.5"/>
-       <rect x="88" y="${52 + headY}" width="24" height="8" rx="2" fill="${gold}" opacity="0.6"/>`
-    : `<circle cx="100" cy="${60 + headY}" r="16" fill="${dark}" stroke="${tier >= 2 ? gold : muted}" stroke-width="1.2"/>`;
-
-  const aura = renderAuraSVG(equipped.aura, charged) || tierAura;
-  const companion = renderCompanionSVG(equipped.companion, bodyY);
-  const armor = renderArmorSVG(equipped.armor, tier, bodyY, gold, muted, dark);
-  const sword = renderSwordSVG(equipped.sword, tier, swordY, gold, goldLight);
-
-  return `<svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg">
-    ${glowDef}
-    ${aura}
-    ${companion}
-    ${cape}
-    <line x1="100" y1="${150 + bodyY}" x2="100" y2="${210 + bodyY}" stroke="${muted}" stroke-width="3" stroke-linecap="round"/>
-    ${armor}
-    <line x1="75" y1="${115 + bodyY}" x2="60" y2="${145 + bodyY}" stroke="${muted}" stroke-width="2.5" stroke-linecap="round"/>
-    <line x1="125" y1="${115 + bodyY}" x2="140" y2="${145 + bodyY}" stroke="${muted}" stroke-width="2.5" stroke-linecap="round"/>
-    ${helmet}
-    ${sword}
-    ${charged ? `<circle cx="100" cy="130" r="70" fill="${gold}" opacity="0.06"/>` : ''}
-  </svg>`;
+function renderHeroImage(userLevel, recoveryToday) {
+  const img = document.getElementById('kriger-hero-img');
+  setHeroImage(img, userLevel);
+  applyHeroRecoveryEffects(recoveryToday);
 }
 
 function animateStatBar(id, valId, value, delay) {
@@ -3582,8 +3578,25 @@ function renderCosmeticsPicker() {
 function showLevelUp(newLevel, prevLevel) {
   const overlay = document.getElementById('kriger-levelup-overlay');
   const num = document.getElementById('kriger-levelup-num');
+  const oldImg = document.getElementById('kriger-levelup-old');
+  const newImg = document.getElementById('kriger-levelup-new');
   if (!overlay || !num) return;
+
   num.textContent = newLevel;
+
+  const oldImageLevel = getHeroImageLevelForUser(prevLevel);
+  const newImageLevel = getHeroImageLevelForUser(newLevel);
+  const oldUrl = getHeroImageUrl(oldImageLevel);
+  const newUrl = getHeroImageUrl(newImageLevel);
+
+  if (oldImg) {
+    oldImg.src = oldUrl;
+    oldImg.style.display = oldImageLevel === newImageLevel ? 'none' : 'block';
+  }
+  if (newImg) {
+    newImg.src = newUrl;
+    newImg.style.opacity = oldImageLevel === newImageLevel ? '0' : '';
+  }
 
   const newlyUnlocked = WARRIOR_COSMETICS.filter(
     c => c.level > prevLevel && c.level <= newLevel && c.level > 1
@@ -3592,7 +3605,7 @@ function showLevelUp(newLevel, prevLevel) {
   if (!sub) {
     sub = document.createElement('div');
     sub.className = 'kriger-levelup-sub';
-    sub.style.cssText = 'font-size:14px;color:var(--muted);text-align:center;max-width:280px;line-height:1.5';
+    sub.style.cssText = 'font-size:14px;color:var(--muted);text-align:center;max-width:280px;line-height:1.5;opacity:0';
     num.parentNode.insertBefore(sub, num.nextSibling);
   }
   if (newLevel === 20) {
@@ -3601,6 +3614,9 @@ function showLevelUp(newLevel, prevLevel) {
   } else if (newlyUnlocked.length) {
     sub.textContent = 'Låst opp: ' + newlyUnlocked.map(c => c.name).join(', ');
     sub.style.color = 'var(--gold)';
+  } else if (newImageLevel > oldImageLevel) {
+    sub.textContent = 'Ny scene låst opp — krigeren har vokst!';
+    sub.style.color = 'var(--gold)';
   } else if (newLevel > 20) {
     sub.textContent = 'Fortsett grinda — nye utseender venter.';
     sub.style.color = 'var(--muted)';
@@ -3608,19 +3624,26 @@ function showLevelUp(newLevel, prevLevel) {
     sub.textContent = '';
   }
 
+  overlay.classList.remove('animating');
   overlay.classList.add('show');
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => overlay.classList.add('animating'));
+  });
 }
 
 function dismissLevelUp(e) {
   if (e) e.stopPropagation();
-  document.getElementById('kriger-levelup-overlay')?.classList.remove('show');
+  const overlay = document.getElementById('kriger-levelup-overlay');
+  if (!overlay) return;
+  overlay.classList.remove('show', 'animating');
+  const level = levelFromXp(state.warrior.xp).level;
+  renderHeroImage(level, getTodayRecovery());
 }
 
 function renderKriger() {
   const w = state.warrior;
   const recoveryToday = getTodayRecovery();
   const { level, xpInLevel, xpNeeded } = levelFromXp(w.xp);
-  const cosmetics = w.cosmetics || getDefaultCosmetics();
 
   document.getElementById('kriger-form-text').textContent = getKrigerFormLine(recoveryToday);
   document.getElementById('kriger-level').textContent = level;
@@ -3657,12 +3680,9 @@ function renderKriger() {
   }
 
   const hero = document.getElementById('kriger-hero');
-  const svgWrap = document.getElementById('kriger-svg-wrap');
-  hero.classList.toggle('charged', recoveryToday != null && recoveryToday > 66);
-  hero.classList.toggle('tired', recoveryToday != null && recoveryToday < 34);
-  svgWrap.classList.toggle('charged', recoveryToday != null && recoveryToday > 66);
-  svgWrap.classList.toggle('tired', recoveryToday != null && recoveryToday < 34);
-  svgWrap.innerHTML = renderWarriorSVG(level, recoveryToday, cosmetics);
+  const overlayOpen = document.getElementById('kriger-levelup-overlay')?.classList.contains('show');
+  const heroLevel = overlayOpen && w.prevLevel && w.prevLevel < level ? w.prevLevel : level;
+  renderHeroImage(heroLevel, recoveryToday);
 
   const stats = [
     ['styrke', w.styrke],
@@ -3680,6 +3700,10 @@ function renderKriger() {
 }
 
 async function syncKriger() {
+  if (state.whoop.connected) {
+    try { await fetchWhoopData(); } catch { /* use cached recovery */ }
+  }
+
   const prev = await loadWarrior();
   const prevLevel = prev?.level || state.warrior.level || 1;
   let totalXp = prev?.xp || 0;
@@ -3724,14 +3748,14 @@ async function syncKriger() {
     cosmetics,
   });
 
-  renderKriger();
-
   if (level > prevLevel) {
     showLevelUp(level, prevLevel);
   }
+  renderKriger();
 }
 
 async function initWarrior() {
+  preloadHeroImages();
   const row = await loadWarrior();
   if (row) {
     const { level } = levelFromXp(row.xp);
@@ -3750,6 +3774,10 @@ async function initWarrior() {
     };
   } else {
     state.warrior.cosmetics = getDefaultCosmetics();
+  }
+  const img = document.getElementById('kriger-hero-img');
+  if (img && state.warrior.xp != null) {
+    setHeroImage(img, levelFromXp(state.warrior.xp).level);
   }
 }
 
