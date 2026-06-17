@@ -324,13 +324,22 @@ nav {
 
 /* STRENGTH LOG */
 .fotball-ex-log {
-  background:none; border:none; color:var(--muted2); cursor:pointer;
-  padding:4px; display:flex; align-items:center; justify-content:center;
-  flex-shrink:0; transition:color 0.15s;
+  background:var(--gold-dim); border:1px solid rgba(201,168,76,0.35);
+  border-radius:var(--radius-sm); color:var(--gold); cursor:pointer;
+  padding:6px 10px; display:flex; align-items:center; justify-content:center; gap:4px;
+  flex-shrink:0; transition:all 0.15s; font-family:'DM Sans',sans-serif;
+  font-size:11px; font-weight:500; letter-spacing:0.04em;
 }
-.fotball-ex-log:hover { color:var(--gold); }
-.fotball-ex-log.has-data { color:var(--gold); }
-.fotball-ex-log svg { width:16px; height:16px; stroke-width:1.5; }
+.fotball-ex-log:hover { background:rgba(201,168,76,0.2); border-color:var(--gold); }
+.fotball-ex-log.has-data { background:var(--gold); color:#000; border-color:var(--gold); }
+.fotball-ex-log svg { width:14px; height:14px; stroke-width:2; flex-shrink:0; }
+.strength-hint {
+  font-size:11px; color:var(--muted); margin-bottom:12px; padding:10px 12px;
+  background:var(--bg3); border-radius:var(--radius-sm); border:1px solid var(--border);
+}
+.strength-empty-chart {
+  text-align:center; padding:24px 16px; color:var(--muted); font-size:13px; line-height:1.5;
+}
 .fotball-ex-actions { display:flex; gap:4px; flex-shrink:0; }
 #strength-log-overlay {
   display:none; position:fixed; inset:0; z-index:260;
@@ -844,6 +853,9 @@ nav {
   <div id="fotball-week-view" style="display:none"></div>
   <div id="fotball-day-view"></div>
 
+  <!-- Strength progress (always visible) -->
+  <div id="strength-progress-section"></div>
+
   <!-- Post-session logging -->
   <div class="section-label">Logg etter økt</div>
   <div class="card">
@@ -1213,7 +1225,7 @@ async function initApp() {
   state.rewards = rewards;
   state.savingsGoal = savingsGoal;
   state.strengthLogsByKey = {};
-  strengthLogs.forEach(row => {
+  (strengthLogs || []).forEach(row => {
     state.strengthLogsByKey[`${row.date}|${row.exercise}`] = row.sets || [];
   });
 
@@ -1901,14 +1913,16 @@ async function saveSessionLog() {
 
 function isStrengthLoggable(blockName, name, detail) {
   if (/sprint|bane|teknikk|mobility|kondis|oppvarming|recovery|golf|stranda|lagtrening/i.test(blockName)) return false;
-  if (!/(\d+)\s*×\s*(\d+)/.test(detail)) return false;
-  if (/×\s*\d+\s*m\b/i.test(detail)) return false;
-  if (/×\s*\d+\s*(sek|min)\b/i.test(detail)) return false;
+  const normalized = detail.replace(/[xX]/g, '×');
+  if (!/(\d+)\s*×\s*(\d+)/.test(normalized)) return false;
+  if (/×\s*\d+\s*m\b/i.test(normalized)) return false;
+  if (/×\s*\d+\s*(sek|min)\b/i.test(normalized)) return false;
   return true;
 }
 
 function parseSetCount(detail) {
-  const m = detail.match(/(\d+)\s*×/);
+  const normalized = detail.replace(/[xX]/g, '×');
+  const m = normalized.match(/(\d+)\s*×/);
   return m ? parseInt(m[1], 10) : 3;
 }
 
@@ -2050,14 +2064,21 @@ function setStrengthChartMetric(metric) {
 function renderStrengthProgressSection() {
   const el = document.getElementById('strength-progress-section');
   if (!el) return;
-  const exercises = getLoggedExercises();
+  const logged = getLoggedExercises();
+  const exercises = logged.length ? logged : getLoggableExercisesFromDay();
   if (!exercises.length) {
-    el.innerHTML = '';
+    el.innerHTML = `
+      <div class="section-label">Styrkeprogresjon</div>
+      <div class="card strength-empty-chart">
+        Velg <strong>Dag</strong>-visning og en treningsdag med gymøvelser (f.eks. tirsdag/onsdag).<br>
+        Trykk <strong>Logg</strong> ved en styrkeøvelse for å registrere vekt og reps.
+      </div>`;
     return;
   }
   if (!strengthChartExercise || !exercises.includes(strengthChartExercise)) {
     strengthChartExercise = exercises[exercises.length - 1];
   }
+  const hasData = logged.includes(strengthChartExercise);
   el.innerHTML = `
     <div class="section-label">Styrkeprogresjon</div>
     <div class="card">
@@ -2068,8 +2089,22 @@ function renderStrengthProgressSection() {
         <button class="fotball-toggle${strengthChartMetric === 'max' ? ' active' : ''}" onclick="setStrengthChartMetric('max')">Maks vekt</button>
         <button class="fotball-toggle${strengthChartMetric === 'volume' ? ' active' : ''}" onclick="setStrengthChartMetric('volume')">Volum</button>
       </div>
-      <div class="strength-chart-wrap">${renderStrengthChart(strengthChartExercise, strengthChartMetric === 'volume' ? 'volume' : 'max')}</div>
+      <div class="strength-chart-wrap">${hasData ? renderStrengthChart(strengthChartExercise, strengthChartMetric === 'volume' ? 'volume' : 'max') : '<div class="strength-empty-chart">Ingen logg ennå for denne øvelsen. Trykk <strong>Logg</strong> i dagsvisningen.</div>'}</div>
     </div>`;
+}
+
+function getLoggableExercisesFromDay() {
+  const dayKey = fotballSelectedDay || getWeekdayKey(TODAY);
+  const dayData = getDayData(dayKey);
+  if (!dayData) return [];
+  const names = [];
+  dayData.blocks.forEach(block => {
+    block.items.forEach(item => {
+      const parsed = parseItem(item);
+      if (isStrengthLoggable(block.name, parsed.name, parsed.detail)) names.push(parsed.name);
+    });
+  });
+  return names;
 }
 
 function renderExerciseRow(dateStr, ex, blockName) {
@@ -2078,8 +2113,9 @@ function renderExerciseRow(dateStr, ex, blockName) {
   const safeName = ex.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
   const loggable = isStrengthLoggable(blockName, ex.name, ex.detail);
   const hasLog = getStrengthSets(dateStr, ex.name).length > 0;
-  const logBtn = loggable ? `<button class="fotball-ex-log${hasLog ? ' has-data' : ''}" onclick="event.stopPropagation();openStrengthLog('${dateStr}',${JSON.stringify(ex.name)},${parseSetCount(ex.detail)})" aria-label="Logg ${ex.name}">
+  const logBtn = loggable ? `<button class="fotball-ex-log${hasLog ? ' has-data' : ''}" onclick="event.stopPropagation();openStrengthLog('${dateStr}',${JSON.stringify(ex.name)},${parseSetCount(ex.detail)})" aria-label="Logg vekt og reps">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      Logg
     </button>` : '';
   return `<div class="fotball-exercise${isDone ? ' done' : ''}" onclick="toggleFotballExercise('${dateStr}','${ex.id}')">
     <div class="fotball-ex-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor"><polyline points="2 6 5 9 10 3"/></svg></div>
@@ -2132,7 +2168,12 @@ function renderFotballDayView() {
   if (!dayData) {
     content = '<div style="color:var(--muted);font-size:13px;padding:6px 0">Ingen økt planlagt.</div>';
   } else {
-    content = dayData.blocks.map((block, bi) => `
+    const hasLoggable = dayData.blocks.some(b => b.items.some(item => {
+      const p = parseItem(item);
+      return isStrengthLoggable(b.name, p.name, p.detail);
+    }));
+    content = (hasLoggable ? '<div class="strength-hint">Trykk <strong style="color:var(--gold)">Logg</strong> ved styrkeøvelser for å registrere vekt (kg) og reps per sett.</div>' : '') +
+    dayData.blocks.map((block, bi) => `
       <div class="fotball-block-title">${block.name}</div>
       ${block.items.map((item, ii) => {
         const ex = { ...parseItem(item), id: exerciseId(fotballSelectedDay, bi, ii) };
@@ -2150,9 +2191,7 @@ function renderFotballDayView() {
         <div class="fotball-day-sub">${dayName.charAt(0).toUpperCase() + dayName.slice(1)}${isToday ? ' · I dag' : ''}</div>
       </div>
       <div style="margin-top:16px">${content}</div>
-    </div>
-    <div id="strength-progress-section"></div>`;
-  renderStrengthProgressSection();
+    </div>`;
 }
 
 function renderFotball() {
@@ -2185,6 +2224,8 @@ function renderFotball() {
 
   if (fotballView === 'week') renderFotballWeekView();
   else renderFotballDayView();
+
+  renderStrengthProgressSection();
 
   const curLog = state.sessionLogs[TODAY] || {};
   renderEnergyBtns(curLog.energy || 0);
