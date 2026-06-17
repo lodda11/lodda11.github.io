@@ -295,11 +295,15 @@ nav {
   color:var(--gold); margin:16px 0 8px;
 }
 .fotball-block-title:first-child { margin-top:0; }
+.fotball-exercise-wrap { border-bottom:1px solid var(--border); }
+.fotball-exercise-wrap:last-child { border-bottom:none; }
 .fotball-exercise {
   display:flex; align-items:center; gap:12px;
-  padding:11px 0; border-bottom:1px solid var(--border); cursor:pointer;
+  padding:11px 0;
 }
-.fotball-exercise:last-child { border-bottom:none; }
+.fotball-ex-main {
+  display:flex; align-items:center; gap:12px; flex:1; min-width:0; cursor:pointer;
+}
 .fotball-exercise.done .fotball-ex-label { color:var(--muted); text-decoration:line-through; }
 .fotball-exercise.done .fotball-ex-check { background:var(--gold); border-color:var(--gold); }
 .fotball-exercise.done .fotball-ex-check svg { display:block; }
@@ -332,6 +336,7 @@ nav {
 }
 .fotball-ex-log:hover { background:rgba(201,168,76,0.2); border-color:var(--gold); }
 .fotball-ex-log.has-data { background:var(--gold); color:#000; border-color:var(--gold); }
+.fotball-ex-log.open { background:rgba(201,168,76,0.25); border-color:var(--gold); box-shadow:0 0 0 2px rgba(201,168,76,0.2); }
 .fotball-ex-log svg { width:14px; height:14px; stroke-width:2; flex-shrink:0; }
 .strength-hint {
   font-size:11px; color:var(--muted); margin-bottom:12px; padding:10px 12px;
@@ -340,14 +345,22 @@ nav {
 .strength-empty-chart {
   text-align:center; padding:24px 16px; color:var(--muted); font-size:13px; line-height:1.5;
 }
-.fotball-ex-actions { display:flex; gap:4px; flex-shrink:0; }
+.fotball-ex-actions { display:flex; gap:6px; flex-shrink:0; position:relative; z-index:2; }
 #strength-log-overlay {
-  display:none; position:fixed; inset:0; z-index:300;
+  display:none; position:fixed; inset:0; z-index:9999;
   background:rgba(0,0,0,0.85); backdrop-filter:blur(8px);
   align-items:flex-end; justify-content:center;
   padding:0 0 max(80px, env(safe-area-inset-bottom));
 }
-#strength-log-overlay.open { display:flex; }
+#strength-log-overlay.open { display:flex !important; }
+.strength-inline-panel {
+  background:var(--bg3); border:1px solid rgba(201,168,76,0.25);
+  border-radius:var(--radius-sm); padding:14px; margin:-4px 0 12px 42px;
+}
+.strength-inline-header {
+  display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;
+}
+.strength-inline-title { font-size:12px; color:var(--gold); font-weight:500; }
 .strength-log-sheet {
   background:var(--bg2); border:1px solid var(--border);
   border-radius:var(--radius) var(--radius) 0 0;
@@ -1930,11 +1943,17 @@ function strengthLogKey(date, exercise) {
   return `${date}|${exercise}`;
 }
 
+function escapeAttr(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+
 function getStrengthSets(date, exercise) {
+  if (!state.strengthLogsByKey) return [];
   return state.strengthLogsByKey[strengthLogKey(date, exercise)] || [];
 }
 
 function getPreviousStrengthLog(exercise, beforeDate) {
+  if (!state.strengthLogsByKey) return null;
   let best = null;
   Object.keys(state.strengthLogsByKey).forEach(key => {
     const [date, ex] = key.split('|');
@@ -1951,6 +1970,7 @@ function formatStrengthSets(sets) {
 }
 
 function getLoggedExercises() {
+  if (!state.strengthLogsByKey) return [];
   const names = new Set();
   Object.keys(state.strengthLogsByKey).forEach(key => {
     const sets = state.strengthLogsByKey[key];
@@ -1960,6 +1980,7 @@ function getLoggedExercises() {
 }
 
 function getExerciseHistory(exercise) {
+  if (!state.strengthLogsByKey) return [];
   return Object.keys(state.strengthLogsByKey)
     .filter(k => k.endsWith(`|${exercise}`))
     .map(k => {
@@ -1974,53 +1995,67 @@ function getExerciseHistory(exercise) {
 }
 
 let strengthLogCtx = null;
+let strengthInlineOpen = null;
 
-function openStrengthLog(dateStr, exerciseName, setCount) {
-  strengthLogCtx = { date: dateStr, exercise: exerciseName, setCount: parseInt(setCount, 10) || 3 };
-  const overlay = document.getElementById('strength-log-overlay');
-  if (!overlay) return;
-  overlay.classList.add('open');
-  document.body.style.overflow = 'hidden';
-  renderStrengthLogModal();
-}
-
-function openStrengthLogFromBtn(btn) {
-  openStrengthLog(btn.dataset.date, btn.dataset.exercise, btn.dataset.sets);
+function toggleStrengthLog(dateStr, exerciseName, setCount) {
+  const count = parseInt(setCount, 10) || 3;
+  if (strengthInlineOpen?.date === dateStr && strengthInlineOpen?.exercise === exerciseName) {
+    strengthInlineOpen = null;
+    strengthLogCtx = null;
+  } else {
+    strengthInlineOpen = { date: dateStr, exercise: exerciseName, setCount: count };
+    strengthLogCtx = { date: dateStr, exercise: exerciseName, setCount: count };
+  }
+  renderFotballDayView();
+  requestAnimationFrame(() => {
+    const panel = document.querySelector('.strength-inline-panel');
+    if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
 }
 
 function closeStrengthLog() {
   strengthLogCtx = null;
+  strengthInlineOpen = null;
   const overlay = document.getElementById('strength-log-overlay');
   if (overlay) overlay.classList.remove('open');
   document.body.style.overflow = '';
-  renderFotball();
+  renderFotballDayView();
+  renderStrengthProgressSection();
 }
 
-function renderStrengthLogModal() {
-  if (!strengthLogCtx) return;
-  const { date, exercise, setCount } = strengthLogCtx;
-  document.getElementById('strength-log-title').textContent = exercise;
-  const d = new Date(date + 'T12:00:00');
-  document.getElementById('strength-log-date').textContent = d.toLocaleDateString('nb-NO', { weekday: 'long', day: 'numeric', month: 'long' });
-
-  const prev = getPreviousStrengthLog(exercise, date);
-  document.getElementById('strength-log-prev').innerHTML = prev
+function renderInlineStrengthPanel(dateStr, exercise, setCount) {
+  const prev = getPreviousStrengthLog(exercise, dateStr);
+  const sets = getStrengthSets(dateStr, exercise);
+  const prevHtml = prev
     ? `<div class="strength-prev"><strong>Sist (${prev.date}):</strong> ${formatStrengthSets(prev.sets)}</div>`
     : '<div class="strength-prev">Ingen tidligere logg for denne øvelsen.</div>';
-
-  const sets = getStrengthSets(date, exercise);
   const rows = [];
   for (let i = 1; i <= setCount; i++) {
     const s = sets.find(x => x.set === i) || { set: i, weight: '', reps: '' };
     rows.push(`<div class="strength-set-row">
       <span class="strength-set-label">Sett ${i}</span>
-      <input class="strength-inp" type="number" inputmode="decimal" placeholder="kg" value="${s.weight || ''}"
-        onchange="updateStrengthField(${i},'weight',this.value)" onblur="updateStrengthField(${i},'weight',this.value)"/>
-      <input class="strength-inp" type="number" inputmode="numeric" placeholder="reps" value="${s.reps || ''}"
-        onchange="updateStrengthField(${i},'reps',this.value)" onblur="updateStrengthField(${i},'reps',this.value)"/>
+      <input class="strength-inp" type="number" inputmode="decimal" placeholder="kg" value="${s.weight ?? ''}"
+        data-set="${i}" data-field="weight"/>
+      <input class="strength-inp" type="number" inputmode="numeric" placeholder="reps" value="${s.reps ?? ''}"
+        data-set="${i}" data-field="reps"/>
     </div>`);
   }
-  document.getElementById('strength-log-sets').innerHTML = rows.join('');
+  return `<div class="strength-inline-panel">
+    <div class="strength-inline-header">
+      <div class="strength-inline-title">Logg vekt og reps</div>
+      <button type="button" class="btn-ghost strength-inline-close">Lukk</button>
+    </div>
+    ${prevHtml}
+    <div class="strength-inline-sets">${rows.join('')}</div>
+  </div>`;
+}
+
+function openStrengthLog(dateStr, exerciseName, setCount) {
+  toggleStrengthLog(dateStr, exerciseName, setCount);
+}
+
+function openStrengthLogFromBtn(btn) {
+  toggleStrengthLog(btn.dataset.date, btn.dataset.exercise, btn.dataset.sets);
 }
 
 async function updateStrengthField(setNum, field, value) {
@@ -2038,6 +2073,8 @@ async function updateStrengthField(setNum, field, value) {
   sets.sort((a, b) => a.set - b.set);
   state.strengthLogsByKey[key] = sets;
   await saveStrengthLogDB(date, exercise, sets);
+  renderFotballDayView();
+  renderStrengthProgressSection();
 }
 
 function renderStrengthChart(exercise, metric) {
@@ -2119,27 +2156,34 @@ function getLoggableExercisesFromDay() {
 function renderExerciseRow(dateStr, ex, blockName) {
   const checks = state.sessionChecks[dateStr] || {};
   const isDone = !!checks[ex.id];
-  const safeName = ex.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
   const loggable = isStrengthLoggable(blockName, ex.name, ex.detail);
   const hasLog = getStrengthSets(dateStr, ex.name).length > 0;
-  const logBtn = loggable ? `<button type="button" class="fotball-ex-log${hasLog ? ' has-data' : ''}"
-      data-date="${dateStr}" data-exercise="${ex.name.replace(/"/g, '&quot;')}" data-sets="${parseSetCount(ex.detail)}"
-      onclick="event.stopPropagation();event.preventDefault();openStrengthLogFromBtn(this)" aria-label="Logg vekt og reps">
+  const isOpen = strengthInlineOpen?.date === dateStr && strengthInlineOpen?.exercise === ex.name;
+  const setCount = parseSetCount(ex.detail);
+  const logBtn = loggable ? `<button type="button" class="fotball-ex-log${hasLog ? ' has-data' : ''}${isOpen ? ' open' : ''}"
+      data-date="${dateStr}" data-exercise="${escapeAttr(ex.name)}" data-sets="${setCount}"
+      aria-label="Logg vekt og reps">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
       Logg
     </button>` : '';
-  return `<div class="fotball-exercise${isDone ? ' done' : ''}" onclick="toggleFotballExercise('${dateStr}','${ex.id}')">
-    <div class="fotball-ex-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor"><polyline points="2 6 5 9 10 3"/></svg></div>
-    <div class="fotball-ex-info">
-      <div class="fotball-ex-name fotball-ex-label">${ex.name}</div>
-      <div class="fotball-ex-detail">${ex.detail}</div>
+  const inlinePanel = isOpen ? renderInlineStrengthPanel(dateStr, ex.name, setCount) : '';
+  return `<div class="fotball-exercise-wrap">
+    <div class="fotball-exercise${isDone ? ' done' : ''}">
+      <div class="fotball-ex-main" onclick="toggleFotballExercise('${dateStr}','${ex.id}')">
+        <div class="fotball-ex-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor"><polyline points="2 6 5 9 10 3"/></svg></div>
+        <div class="fotball-ex-info">
+          <div class="fotball-ex-name fotball-ex-label">${ex.name}</div>
+          <div class="fotball-ex-detail">${ex.detail}</div>
+        </div>
+      </div>
+      <div class="fotball-ex-actions">
+        ${logBtn}
+        <button type="button" class="fotball-ex-search" data-exercise="${escapeAttr(ex.name)}" aria-label="Søk ${escapeAttr(ex.name)}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+      </div>
     </div>
-    <div class="fotball-ex-actions">
-      ${logBtn}
-      <button class="fotball-ex-search" onclick="event.stopPropagation();searchExercise('${safeName}')" aria-label="Søk ${ex.name}">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      </button>
-    </div>
+    ${inlinePanel}
   </div>`;
 }
 
@@ -2183,7 +2227,7 @@ function renderFotballDayView() {
       const p = parseItem(item);
       return isStrengthLoggable(b.name, p.name, p.detail);
     }));
-    content = (hasLoggable ? '<div class="strength-hint">Trykk <strong style="color:var(--gold)">Logg</strong> ved styrkeøvelser for å registrere vekt (kg) og reps per sett.</div>' : '') +
+    content = (hasLoggable ? '<div class="strength-hint">Trykk <strong style="color:var(--gold)">Logg</strong> ved styrkeøvelser — panelet åpner rett under øvelsen.</div>' : '') +
     dayData.blocks.map((block, bi) => `
       <div class="fotball-block-title">${block.name}</div>
       ${block.items.map((item, ii) => {
@@ -2274,7 +2318,43 @@ function goTo(page, btn) {
   if (page === 'fotball') renderFotball();
 }
 
+// ── FOTBALL EVENTS (delegation — fungerer på mobil) ───────
+function initFotballEvents() {
+  const page = document.getElementById('page-fotball');
+  if (!page || initFotballEvents.done) return;
+  initFotballEvents.done = true;
+
+  page.addEventListener('click', (e) => {
+    const closeBtn = e.target.closest('.strength-inline-close');
+    if (closeBtn) {
+      e.preventDefault();
+      closeStrengthLog();
+      return;
+    }
+    const logBtn = e.target.closest('.fotball-ex-log');
+    if (logBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleStrengthLog(logBtn.dataset.date, logBtn.dataset.exercise, logBtn.dataset.sets);
+      return;
+    }
+    const searchBtn = e.target.closest('.fotball-ex-search');
+    if (searchBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      searchExercise(searchBtn.dataset.exercise);
+    }
+  });
+
+  page.addEventListener('change', (e) => {
+    const inp = e.target.closest('.strength-inp');
+    if (!inp || !strengthLogCtx) return;
+    updateStrengthField(parseInt(inp.dataset.set, 10), inp.dataset.field, inp.value);
+  });
+}
+
 // ── INIT ──────────────────────────────────────────────────
+initFotballEvents();
 initAuth();
 </script>
 </body>
