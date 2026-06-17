@@ -342,7 +342,7 @@ nav {
 }
 .fotball-ex-actions { display:flex; gap:4px; flex-shrink:0; }
 #strength-log-overlay {
-  display:none; position:fixed; inset:0; z-index:260;
+  display:none; position:fixed; inset:0; z-index:300;
   background:rgba(0,0,0,0.85); backdrop-filter:blur(8px);
   align-items:flex-end; justify-content:center;
   padding:0 0 max(80px, env(safe-area-inset-bottom));
@@ -1976,14 +1976,23 @@ function getExerciseHistory(exercise) {
 let strengthLogCtx = null;
 
 function openStrengthLog(dateStr, exerciseName, setCount) {
-  strengthLogCtx = { date: dateStr, exercise: exerciseName, setCount };
-  document.getElementById('strength-log-overlay').classList.add('open');
+  strengthLogCtx = { date: dateStr, exercise: exerciseName, setCount: parseInt(setCount, 10) || 3 };
+  const overlay = document.getElementById('strength-log-overlay');
+  if (!overlay) return;
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
   renderStrengthLogModal();
+}
+
+function openStrengthLogFromBtn(btn) {
+  openStrengthLog(btn.dataset.date, btn.dataset.exercise, btn.dataset.sets);
 }
 
 function closeStrengthLog() {
   strengthLogCtx = null;
-  document.getElementById('strength-log-overlay').classList.remove('open');
+  const overlay = document.getElementById('strength-log-overlay');
+  if (overlay) overlay.classList.remove('open');
+  document.body.style.overflow = '';
   renderFotball();
 }
 
@@ -2113,7 +2122,9 @@ function renderExerciseRow(dateStr, ex, blockName) {
   const safeName = ex.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
   const loggable = isStrengthLoggable(blockName, ex.name, ex.detail);
   const hasLog = getStrengthSets(dateStr, ex.name).length > 0;
-  const logBtn = loggable ? `<button class="fotball-ex-log${hasLog ? ' has-data' : ''}" onclick="event.stopPropagation();openStrengthLog('${dateStr}',${JSON.stringify(ex.name)},${parseSetCount(ex.detail)})" aria-label="Logg vekt og reps">
+  const logBtn = loggable ? `<button type="button" class="fotball-ex-log${hasLog ? ' has-data' : ''}"
+      data-date="${dateStr}" data-exercise="${ex.name.replace(/"/g, '&quot;')}" data-sets="${parseSetCount(ex.detail)}"
+      onclick="event.stopPropagation();event.preventDefault();openStrengthLogFromBtn(this)" aria-label="Logg vekt og reps">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
       Logg
     </button>` : '';
