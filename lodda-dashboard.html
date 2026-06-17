@@ -397,8 +397,54 @@ nav {
 .strength-chart-label { font-size:8px; color:var(--muted); }
 .strength-chart-val { font-size:9px; color:var(--gold); font-family:'DM Mono',monospace; }
 
-/* WHOOP placeholder card */
-.whoop-soon { text-align:center; padding: 40px 20px; }
+/* WHOOP / HELSE */
+.whoop-connect-wrap { min-height: 55vh; }
+.whoop-connect-btn { margin-top: 8px; padding: 14px 28px; font-size: 14px; }
+.whoop-refresh-btn { padding: 10px 12px; display: flex; align-items: center; justify-content: center; }
+.whoop-refresh-btn svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 1.5; fill: none; }
+.whoop-refresh-btn.spinning svg { animation: whoopSpin 0.8s linear infinite; }
+@keyframes whoopSpin { to { transform: rotate(360deg); } }
+.whoop-recovery-card {
+  background: linear-gradient(145deg, var(--bg2), rgba(201,168,76,0.04));
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 24px 20px; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 20px;
+}
+.whoop-recovery-gauge { position: relative; width: 148px; height: 148px; flex-shrink: 0; }
+.whoop-recovery-gauge svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.whoop-gauge-bg { fill: none; stroke: var(--bg3); stroke-width: 2.5; }
+.whoop-gauge-fill {
+  fill: none; stroke-width: 3.5; stroke-linecap: round;
+  transition: stroke-dasharray 0.8s ease, stroke 0.4s ease;
+}
+.whoop-gauge-text {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 2px;
+}
+.whoop-gauge-score {
+  font-family: 'Bebas Neue', sans-serif; font-size: 52px; line-height: 1;
+}
+.whoop-gauge-unit { font-size: 13px; color: var(--muted); letter-spacing: 0.06em; }
+.whoop-recovery-label {
+  font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+.whoop-recovery-sub { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.whoop-stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 40px; line-height: 1; }
+.whoop-stat-unit { font-size: 14px; color: var(--muted); font-family: 'DM Sans'; margin-left: 3px; }
+.whoop-trend-chart { display: flex; align-items: flex-end; gap: 8px; height: 110px; margin-top: 14px; }
+.whoop-trend-col {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  gap: 5px; justify-content: flex-end; height: 100%;
+}
+.whoop-trend-bar {
+  width: 100%; border-radius: 4px 4px 0 0; min-height: 4px;
+  transition: height 0.5s ease, background 0.3s ease;
+}
+.whoop-trend-label { font-size: 9px; color: var(--muted); text-transform: uppercase; }
+.whoop-trend-val { font-size: 9px; font-family: 'DM Mono', monospace; }
+.whoop-status { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.whoop-error { color: var(--red); font-size: 13px; text-align: center; margin-top: 12px; }
 
 /* AUTH */
 #auth-overlay {
@@ -794,13 +840,62 @@ nav {
   <div class="topbar">
     <div>
       <div class="topbar-title">Helse</div>
-      <div class="topbar-sub">Recovery & data</div>
+      <div class="topbar-sub" id="helse-sub">Recovery & data</div>
+    </div>
+    <button type="button" class="btn-ghost whoop-refresh-btn" id="whoop-refresh-btn" onclick="refreshWhoopData()" style="display:none" aria-label="Oppdater data">
+      <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+    </button>
+  </div>
+
+  <div id="whoop-disconnected" style="display:none">
+    <div class="placeholder-center whoop-connect-wrap">
+      <div class="placeholder-icon">⌚</div>
+      <div class="placeholder-title">Koble til WHOOP</div>
+      <div class="placeholder-sub">Synk recovery, HRV, søvn og strain fra WHOOP-båndet ditt.</div>
+      <button type="button" class="btn whoop-connect-btn" id="whoop-connect-btn" onclick="connectWhoop()">Koble til WHOOP</button>
+      <div class="whoop-error" id="whoop-connect-error"></div>
     </div>
   </div>
-  <div class="placeholder-center">
-    <div class="placeholder-icon">⌚</div>
-    <div class="placeholder-title">Whoop kobles til snart</div>
-    <div class="placeholder-sub">Når du får Whoop-en din legger vi inn HRV, recovery score, søvn og treningsbelastning her.</div>
+
+  <div id="whoop-connected" style="display:none">
+    <div class="whoop-recovery-card">
+      <div class="whoop-recovery-gauge" id="whoop-recovery-gauge"></div>
+      <div>
+        <div class="whoop-recovery-label" id="whoop-recovery-label">Recovery</div>
+        <div class="whoop-recovery-sub" id="whoop-recovery-sub">Din kropp er klar for belastning</div>
+        <div class="whoop-status" id="whoop-updated-at"></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">HRV</div>
+        <div><span class="whoop-stat-num" id="whoop-hrv">—</span><span class="whoop-stat-unit">ms</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Hvilepuls</div>
+        <div><span class="whoop-stat-num" id="whoop-rhr">—</span><span class="whoop-stat-unit">bpm</span></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Søvn i natt</div>
+        <div><span class="whoop-stat-num" id="whoop-sleep-hours">—</span><span class="whoop-stat-unit">t</span></div>
+        <div class="stat-label" style="margin-top:8px"><span id="whoop-sleep-perf">—</span>% søvnscore</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Dag strain</div>
+        <div><span class="whoop-stat-num" id="whoop-strain">—</span></div>
+        <div class="stat-label" style="margin-top:8px">Dagens belastning</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Recovery — 7 dager</div>
+      <div class="whoop-trend-chart" id="whoop-trend-chart"></div>
+    </div>
+    <div class="whoop-error" id="whoop-data-error"></div>
   </div>
 </div>
 
@@ -1166,29 +1261,47 @@ async function signOut() {
 }
 
 async function initAuth() {
+  const whoopCallback = isWhoopOAuthCallback();
+  const params = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash.substring(1));
+  const googleCallback = (params.get('code') && !whoopCallback) || hashParams.get('access_token');
+
   const { data: { session } } = await sb.auth.getSession();
 
   if (session) {
     currentUser = session.user;
     document.getElementById('auth-overlay').style.display = 'none';
     setProfileMenuVisible(true);
-    await initApp();
-  } else {
-    const params = new URLSearchParams(window.location.search);
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    if (params.get('code') || hashParams.get('access_token')) {
-      const { data } = await sb.auth.exchangeCodeForSession(window.location.href);
-      if (data?.session) {
-        currentUser = data.session.user;
-        document.getElementById('auth-overlay').style.display = 'none';
-        setProfileMenuVisible(true);
-        document.querySelectorAll('.page, nav').forEach(el => el.style.display = '');
-        window.history.replaceState({}, document.title, window.location.pathname);
-        await initApp();
+    document.querySelectorAll('.page, nav').forEach(el => el.style.display = '');
+    if (whoopCallback) {
+      try {
+        await handleWhoopOAuthCallback();
+      } catch (err) {
+        console.error('WHOOP exchange failed', err);
+        state.whoop.connectError = err.message || 'Kunne ikke koble til WHOOP';
       }
-    } else {
-      document.querySelectorAll('.page, nav').forEach(el => el.style.display = 'none');
     }
+    await initApp();
+    await maybeExchangePendingWhoopCode();
+  } else if (googleCallback) {
+    const { data } = await sb.auth.exchangeCodeForSession(window.location.href);
+    if (data?.session) {
+      currentUser = data.session.user;
+      document.getElementById('auth-overlay').style.display = 'none';
+      setProfileMenuVisible(true);
+      document.querySelectorAll('.page, nav').forEach(el => el.style.display = '');
+      window.history.replaceState({}, document.title, window.location.pathname);
+      await initApp();
+      await maybeExchangePendingWhoopCode();
+    }
+  } else if (whoopCallback) {
+    const code = params.get('code');
+    sessionStorage.setItem('whoop_pending_code', code);
+    sessionStorage.removeItem('whoop_oauth_state');
+    cleanWhoopOAuthUrl();
+    document.querySelectorAll('.page, nav').forEach(el => el.style.display = 'none');
+  } else {
+    document.querySelectorAll('.page, nav').forEach(el => el.style.display = 'none');
   }
 
   sb.auth.onAuthStateChange(async (event, session) => {
@@ -1198,6 +1311,7 @@ async function initAuth() {
       setProfileMenuVisible(true);
       document.querySelectorAll('.page, nav').forEach(el => el.style.display = '');
       await initApp();
+      await maybeExchangePendingWhoopCode();
     }
   });
 }
@@ -1244,6 +1358,7 @@ async function initApp() {
 
   renderHome();
   renderRutiner();
+  await initWhoop();
 }
 
 // ── STATE ─────────────────────────────────────────────────
@@ -1260,6 +1375,14 @@ let state = {
   rewards: [],
   savingsGoal: 0,
   strengthLogsByKey: {},
+  whoop: {
+    connected: false,
+    loading: false,
+    parsed: null,
+    fetchedAt: null,
+    connectError: null,
+    dataError: null,
+  },
 };
 let editDayDate = null;
 
@@ -2316,6 +2439,314 @@ function goTo(page, btn) {
   window.scrollTo(0, 0);
   if (page === 'okonomi') renderEconomi();
   if (page === 'fotball') renderFotball();
+  if (page === 'helse') renderHelse();
+}
+
+// ── WHOOP / HELSE ─────────────────────────────────────────
+const WHOOP_FN = `${SUPABASE_URL}/functions/v1/whoop`;
+
+function isWhoopOAuthCallback() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const urlState = params.get('state');
+  const savedState = sessionStorage.getItem('whoop_oauth_state');
+  return !!(code && urlState && savedState && urlState === savedState);
+}
+
+function cleanWhoopOAuthUrl() {
+  window.history.replaceState({}, document.title, window.location.pathname);
+}
+
+function whoopCacheKey() {
+  return currentUser ? `whoop_cache_${currentUser.id}` : null;
+}
+
+function loadWhoopCache() {
+  const key = whoopCacheKey();
+  if (!key) return null;
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveWhoopCache(parsed, fetchedAt) {
+  const key = whoopCacheKey();
+  if (!key) return;
+  localStorage.setItem(key, JSON.stringify({ parsed, fetchedAt }));
+}
+
+async function whoopFetch(action, opts = {}) {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) throw new Error('Ikke innlogget');
+
+  const res = await fetch(`${WHOOP_FN}?action=${action}`, {
+    method: opts.method || 'GET',
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+      apikey: SUPABASE_ANON_KEY,
+      'Content-Type': 'application/json',
+    },
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'WHOOP-forespørsel feilet');
+  return data;
+}
+
+async function checkWhoopConnected() {
+  const { data } = await sb.from('whoop_tokens').select('updated_at').maybeSingle();
+  return !!data;
+}
+
+async function connectWhoop() {
+  const btn = document.getElementById('whoop-connect-btn');
+  const errEl = document.getElementById('whoop-connect-error');
+  if (errEl) errEl.textContent = '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Kobler til…'; }
+
+  try {
+    const { url, state } = await whoopFetch('auth-url');
+    sessionStorage.setItem('whoop_oauth_state', state);
+    window.location.href = url;
+  } catch (err) {
+    if (errEl) errEl.textContent = err.message || 'Kunne ikke starte WHOOP-innlogging';
+    if (btn) { btn.disabled = false; btn.textContent = 'Koble til WHOOP'; }
+  }
+}
+
+async function whoopExchange(code) {
+  await whoopFetch('exchange', { method: 'POST', body: { code } });
+  state.whoop.connected = true;
+  state.whoop.connectError = null;
+}
+
+async function handleWhoopOAuthCallback() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  sessionStorage.removeItem('whoop_oauth_state');
+  cleanWhoopOAuthUrl();
+  await whoopExchange(code);
+}
+
+async function maybeExchangePendingWhoopCode() {
+  const pending = sessionStorage.getItem('whoop_pending_code');
+  if (!pending) return;
+  sessionStorage.removeItem('whoop_pending_code');
+  try {
+    await whoopExchange(pending);
+    await fetchWhoopData(true);
+    renderHelse();
+  } catch (err) {
+    state.whoop.connectError = err.message || 'Kunne ikke koble til WHOOP';
+    renderHelse();
+  }
+}
+
+function recoveryColor(score) {
+  if (score == null) return 'var(--muted)';
+  if (score > 66) return 'var(--green)';
+  if (score >= 34) return 'var(--gold)';
+  return 'var(--red)';
+}
+
+function recoveryMessage(score) {
+  if (score == null) return 'Kalibrerer — data kommer snart';
+  if (score > 66) return 'Kroppen er klar — push deg i dag';
+  if (score >= 34) return 'Moderat recovery — tren smart';
+  return 'Ta det rolig — prioritér søvn og restitusjon';
+}
+
+function renderRecoveryGauge(elId, score) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const pct = score != null ? Math.max(0, Math.min(100, score)) : 0;
+  const color = recoveryColor(score);
+  const display = score != null ? score : '—';
+  el.innerHTML = `<svg viewBox="0 0 36 36">
+    <circle class="whoop-gauge-bg" cx="18" cy="18" r="15.9"/>
+    <circle class="whoop-gauge-fill" cx="18" cy="18" r="15.9"
+      stroke="${color}" stroke-dasharray="${pct} 100" pathLength="100"/>
+  </svg>
+  <div class="whoop-gauge-text">
+    <div class="whoop-gauge-score" style="color:${color}">${display}</div>
+    <div class="whoop-gauge-unit">${score != null ? '%' : ''}</div>
+  </div>`;
+  el.style.filter = score != null
+    ? `drop-shadow(0 0 18px ${color === 'var(--green)' ? 'rgba(82,201,122,0.35)' : color === 'var(--gold)' ? 'rgba(201,168,76,0.3)' : 'rgba(224,82,82,0.3)'})`
+    : 'none';
+}
+
+function parseWhoopData({ recovery, sleep, cycle }) {
+  const rec = recovery?.records?.[0];
+  const slp = sleep?.records?.[0];
+  const cyc = cycle?.records?.[0];
+  const score = rec?.score;
+
+  const stage = slp?.score?.stage_summary;
+  let sleepHours = null;
+  if (stage) {
+    const asleep = (stage.total_light_sleep_time_milli || 0) +
+      (stage.total_slow_wave_sleep_time_milli || 0) +
+      (stage.total_rem_sleep_time_milli || 0);
+    sleepHours = Math.round(asleep / 3600000 * 10) / 10;
+  }
+
+  const trend = [...(recovery?.records || [])].reverse()
+    .filter(r => r.score && !r.score.user_calibrating)
+    .map(r => ({
+      date: r.created_at?.slice(0, 10) || '',
+      score: Math.round(r.score.recovery_score ?? 0),
+    }));
+
+  return {
+    recoveryScore: score?.user_calibrating ? null : Math.round(score?.recovery_score ?? 0),
+    hrv: score?.hrv_rmssd_milli != null ? Math.round(score.hrv_rmssd_milli) : null,
+    rhr: score?.resting_heart_rate ?? null,
+    sleepHours,
+    sleepPerf: slp?.score?.sleep_performance_percentage != null
+      ? Math.round(slp.score.sleep_performance_percentage) : null,
+    strain: cyc?.score?.strain != null ? Math.round(cyc.score.strain * 10) / 10 : null,
+    trend,
+    calibrating: score?.user_calibrating ?? false,
+  };
+}
+
+function formatWhoopUpdatedAt(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return 'Oppdatert ' + d.toLocaleString('nb-NO', {
+    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+  });
+}
+
+function renderWhoopTrend(trend) {
+  const el = document.getElementById('whoop-trend-chart');
+  if (!el) return;
+  if (!trend?.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:20px 0">Ingen trenddata ennå</div>';
+    return;
+  }
+
+  const max = Math.max(...trend.map(t => t.score), 1);
+  el.innerHTML = trend.map(t => {
+    const h = Math.max(6, Math.round((t.score / max) * 100));
+    const color = recoveryColor(t.score);
+    const label = t.date
+      ? new Date(t.date + 'T12:00:00').toLocaleDateString('nb-NO', { weekday: 'short' }).slice(0, 2)
+      : '';
+    return `<div class="whoop-trend-col">
+      <div class="whoop-trend-val" style="color:${color}">${t.score}</div>
+      <div class="whoop-trend-bar" style="height:${h}%;background:${color}"></div>
+      <div class="whoop-trend-label">${label}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderWhoopMetrics(parsed) {
+  if (!parsed) return;
+  renderRecoveryGauge('whoop-recovery-gauge', parsed.recoveryScore);
+  document.getElementById('whoop-recovery-label').textContent =
+    parsed.calibrating ? 'Kalibrerer' : 'Recovery';
+  document.getElementById('whoop-recovery-sub').textContent =
+    recoveryMessage(parsed.recoveryScore);
+  document.getElementById('whoop-hrv').textContent = parsed.hrv ?? '—';
+  document.getElementById('whoop-rhr').textContent = parsed.rhr ?? '—';
+  document.getElementById('whoop-sleep-hours').textContent = parsed.sleepHours ?? '—';
+  document.getElementById('whoop-sleep-perf').textContent = parsed.sleepPerf ?? '—';
+  document.getElementById('whoop-strain').textContent = parsed.strain ?? '—';
+  document.getElementById('whoop-updated-at').textContent =
+    formatWhoopUpdatedAt(state.whoop.fetchedAt);
+  renderWhoopTrend(parsed.trend);
+}
+
+function setWhoopView(mode) {
+  document.getElementById('whoop-disconnected').style.display = mode === 'disconnected' ? 'block' : 'none';
+  document.getElementById('whoop-connected').style.display = mode === 'connected' ? 'block' : 'none';
+  document.getElementById('whoop-refresh-btn').style.display = mode === 'connected' ? 'flex' : 'none';
+}
+
+function renderHelse() {
+  const sub = document.getElementById('helse-sub');
+  const connectErr = document.getElementById('whoop-connect-error');
+  const dataErr = document.getElementById('whoop-data-error');
+
+  if (state.whoop.connectError && connectErr) {
+    connectErr.textContent = state.whoop.connectError;
+  }
+
+  if (!state.whoop.connected) {
+    setWhoopView('disconnected');
+    if (sub) sub.textContent = 'Recovery & data';
+    return;
+  }
+
+  setWhoopView('connected');
+  if (sub) sub.textContent = 'WHOOP tilkoblet';
+  if (dataErr) dataErr.textContent = state.whoop.dataError || '';
+
+  if (state.whoop.parsed) renderWhoopMetrics(state.whoop.parsed);
+}
+
+async function fetchWhoopData(force = false) {
+  if (state.whoop.loading && !force) return;
+  state.whoop.loading = true;
+  state.whoop.dataError = null;
+
+  const refreshBtn = document.getElementById('whoop-refresh-btn');
+  if (refreshBtn) refreshBtn.classList.add('spinning');
+
+  try {
+    const raw = await whoopFetch('data');
+    const parsed = parseWhoopData(raw);
+    const fetchedAt = new Date().toISOString();
+    state.whoop.parsed = parsed;
+    state.whoop.fetchedAt = fetchedAt;
+    state.whoop.connected = true;
+    saveWhoopCache(parsed, fetchedAt);
+    renderHelse();
+  } catch (err) {
+    const msg = err.message || '';
+    if (msg.includes('No WHOOP tokens') || msg.includes('tokens found')) {
+      state.whoop.connected = false;
+      state.whoop.parsed = null;
+    } else {
+      state.whoop.dataError = msg || 'Kunne ikke hente WHOOP-data';
+    }
+    renderHelse();
+    throw err;
+  } finally {
+    state.whoop.loading = false;
+    if (refreshBtn) refreshBtn.classList.remove('spinning');
+  }
+}
+
+async function refreshWhoopData() {
+  try {
+    await fetchWhoopData(true);
+  } catch {
+    // error already shown in renderHelse
+  }
+}
+
+async function initWhoop() {
+  state.whoop.connectError = state.whoop.connectError || null;
+  state.whoop.connected = await checkWhoopConnected();
+
+  const cache = loadWhoopCache();
+  if (cache?.parsed) {
+    state.whoop.parsed = cache.parsed;
+    state.whoop.fetchedAt = cache.fetchedAt;
+  }
+
+  renderHelse();
+
+  if (state.whoop.connected) {
+    fetchWhoopData().catch(() => {});
+  }
 }
 
 // ── FOTBALL EVENTS (delegation — fungerer på mobil) ───────
