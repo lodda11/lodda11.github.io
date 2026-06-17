@@ -14,6 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="nytt-program.js"></script>
 <style>
 :root {
   --bg: #0a0a0a;
@@ -268,6 +269,59 @@ nav {
 .week-dot.done .wd-dot { background:var(--gold); }
 .week-dot.today .wd-dot { background:var(--gold); }
 
+/* FOOTBALL PROGRAM */
+.fotball-toggles { display:flex; gap:8px; margin-bottom:12px; }
+.fotball-toggle {
+  flex:1; background:var(--bg3); border:1px solid var(--border);
+  border-radius:var(--radius-sm); color:var(--muted); font-family:'DM Sans',sans-serif;
+  font-size:12px; font-weight:500; letter-spacing:0.04em; text-transform:uppercase;
+  padding:10px 12px; cursor:pointer; transition:all 0.2s;
+}
+.fotball-toggle.active { background:var(--gold-dim); border-color:rgba(201,168,76,0.4); color:var(--gold); }
+.fotball-week-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.fotball-week-card {
+  background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius);
+  padding:14px 16px; cursor:pointer; transition:all 0.15s;
+}
+.fotball-week-card:hover { border-color:var(--border2); }
+.fotball-week-card.today { border-color:var(--gold); }
+.fotball-week-card.done { background:var(--gold-dim); border-color:rgba(201,168,76,0.3); }
+.fwc-day { font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); margin-bottom:4px; }
+.fotball-week-card.today .fwc-day { color:var(--gold); }
+.fwc-title { font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:0.04em; line-height:1.1; margin-bottom:8px; }
+.fwc-progress { font-size:11px; color:var(--muted); margin-top:6px; }
+.fotball-block-title {
+  font-size:10px; text-transform:uppercase; letter-spacing:0.1em;
+  color:var(--gold); margin:16px 0 8px;
+}
+.fotball-block-title:first-child { margin-top:0; }
+.fotball-exercise {
+  display:flex; align-items:center; gap:12px;
+  padding:11px 0; border-bottom:1px solid var(--border); cursor:pointer;
+}
+.fotball-exercise:last-child { border-bottom:none; }
+.fotball-exercise.done .fotball-ex-label { color:var(--muted); text-decoration:line-through; }
+.fotball-exercise.done .fotball-ex-check { background:var(--gold); border-color:var(--gold); }
+.fotball-exercise.done .fotball-ex-check svg { display:block; }
+.fotball-ex-check {
+  width:20px; height:20px; border-radius:50%; border:1.5px solid var(--border2);
+  display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all 0.2s;
+}
+.fotball-ex-check svg { display:none; width:11px; height:11px; stroke:#000; stroke-width:3; }
+.fotball-ex-info { flex:1; min-width:0; }
+.fotball-ex-name { font-size:13px; color:var(--text); }
+.fotball-ex-detail { font-size:11px; color:var(--muted); margin-top:2px; font-family:'DM Mono',monospace; }
+.fotball-ex-search {
+  background:none; border:none; color:var(--muted2); cursor:pointer;
+  padding:4px; display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; transition:color 0.15s;
+}
+.fotball-ex-search:hover { color:var(--gold); }
+.fotball-ex-search svg { width:16px; height:16px; stroke-width:1.5; }
+.fotball-day-header { margin-bottom:4px; }
+.fotball-day-title { font-family:'Bebas Neue',sans-serif; font-size:26px; letter-spacing:0.04em; line-height:1; }
+.fotball-day-sub { font-size:12px; color:var(--muted); margin-top:4px; }
+
 /* WHOOP placeholder card */
 .whoop-soon { text-align:center; padding: 40px 20px; }
 
@@ -318,6 +372,75 @@ nav {
   transition: background 0.15s, color 0.15s;
 }
 .profile-dropdown-item:hover { background: var(--bg3); color: var(--text); }
+
+/* UPGRADED UI */
+.progress-ring-wrap { position: relative; width: 120px; height: 120px; flex-shrink: 0; }
+.progress-ring-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring-bg { fill: none; stroke: var(--bg3); stroke-width: 3; }
+.ring-fill { fill: none; stroke: var(--gold); stroke-width: 3; stroke-linecap: round; transition: stroke-dasharray 0.6s ease; }
+.ring-text {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--text);
+}
+.streak-hero {
+  display: flex; align-items: center; gap: 16px; padding: 20px;
+  background: linear-gradient(135deg, var(--bg2), rgba(201,168,76,0.06));
+  border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 12px;
+}
+.streak-flame { font-size: 42px; line-height: 1; }
+.streak-num { font-family: 'Bebas Neue', sans-serif; font-size: 56px; color: var(--gold); line-height: 1; }
+.streak-meta { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.contrib-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.contrib-cell {
+  aspect-ratio: 1; border-radius: 4px; background: var(--bg3); cursor: pointer;
+  transition: transform 0.15s, background 0.2s; border: 1px solid transparent;
+}
+.contrib-cell:hover { transform: scale(1.15); }
+.contrib-done { background: var(--gold); border-color: rgba(201,168,76,0.4); }
+.contrib-partial { background: var(--muted2); }
+.contrib-pending { background: var(--bg3); border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold-dim2); }
+.contrib-failed { background: #1a1212; border-color: rgba(224,82,82,0.2); }
+.routine-check-lg { width: 28px; height: 28px; }
+.routine-item-lg { padding: 16px 0; }
+.reward-card.celebrate { animation: goldGlow 1.2s ease; border-color: var(--gold); }
+.reward-card.claimed { opacity: 0.55; }
+@keyframes goldGlow { 0%,100%{box-shadow:none} 50%{box-shadow:0 0 30px rgba(201,168,76,0.35)} }
+@keyframes confettiFall { to { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+.confetti-piece {
+  position: fixed; width: 8px; height: 8px; top: -10px; z-index: 300;
+  animation: confettiFall 2.5s ease-in forwards; pointer-events: none;
+}
+.reward-icon { font-size: 28px; margin-bottom: 8px; }
+.reward-pct { font-size: 11px; color: var(--gold); margin-top: 6px; }
+.home-focus { display: flex; gap: 16px; align-items: center; }
+.motivation-card {
+  background: var(--gold-dim); border: 1px solid rgba(201,168,76,0.2);
+  border-radius: var(--radius); padding: 16px 18px; margin-bottom: 12px;
+}
+.motivation-num { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--gold); }
+.eco-chart { display: flex; align-items: flex-end; gap: 8px; height: 120px; margin-top: 12px; }
+.eco-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+.eco-bar {
+  width: 100%; background: var(--gold); border-radius: 4px 4px 0 0;
+  min-height: 4px; transition: height 0.5s ease;
+}
+.eco-bar-label { font-size: 9px; color: var(--muted); text-transform: uppercase; }
+.eco-bar-val { font-size: 10px; color: var(--gold); font-family: 'DM Mono', monospace; }
+.savings-progress { margin-top: 12px; }
+#edit-day-overlay {
+  display: none; position: fixed; inset: 0; z-index: 250;
+  background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+  align-items: flex-end; justify-content: center; padding: 0 0 max(80px, env(safe-area-inset-bottom));
+}
+#edit-day-overlay.open { display: flex; }
+.edit-day-sheet {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius) var(--radius) 0 0;
+  width: 100%; max-width: 480px; max-height: 75vh; overflow-y: auto; padding: 20px;
+  animation: slideUp 0.25s ease;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.edit-day-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.edit-day-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 0.04em; }
 </style>
 </head>
 <body>
@@ -351,15 +474,30 @@ nav {
     </div>
   </div>
 
-  <!-- Today completion -->
+  <!-- Day overview ring -->
   <div class="card">
-    <div class="card-title">Dagens fremgang</div>
-    <div style="display:flex;align-items:baseline;gap:6px">
-      <div class="card-big" id="home-pct">0</div>
-      <div class="card-big-unit">%</div>
+    <div class="home-focus">
+      <div class="progress-ring-wrap" id="home-ring"></div>
+      <div style="flex:1">
+        <div class="card-title">Dagens fremgang</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px" id="home-left"></div>
+        <div class="progress-bar-wrap" style="margin-top:12px"><div class="progress-bar-fill" id="home-bar" style="width:0%"></div></div>
+      </div>
     </div>
-    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="home-bar" style="width:0%"></div></div>
-    <div style="font-size:12px;color:var(--muted);margin-top:10px" id="home-left"></div>
+  </div>
+
+  <!-- Dagens fokus -->
+  <div class="motivation-card">
+    <div class="card-title">Dagens fokus</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.04em;margin-top:4px" id="home-training"></div>
+    <div style="font-size:12px;color:var(--muted);margin-top:6px" id="home-focus-sub"></div>
+  </div>
+
+  <!-- Milepæl -->
+  <div class="card" id="home-milestone-card">
+    <div class="card-title">Neste milepæl</div>
+    <div class="motivation-num" id="home-milestone-days">—</div>
+    <div class="stat-label" id="home-milestone-label">dager igjen</div>
   </div>
 
   <!-- Quick habits -->
@@ -403,44 +541,82 @@ nav {
     <button class="btn-ghost" onclick="toggleDayType()" id="daytype-btn">Fridag</button>
   </div>
 
-  <!-- Rewards -->
-  <div class="reward-card" id="reward-caspara">
-    <div class="reward-name">Caspara Tracksuit</div>
-    <div class="reward-meta">14 dager streak &nbsp;·&nbsp; €239 ca.</div>
-    <div class="reward-progress">
-      <div class="reward-current" id="reward-caspara-num">0</div>
-      <div class="reward-total">/ 14 dager</div>
+  <!-- Streak hero -->
+  <div class="streak-hero">
+    <div class="streak-flame">🔥</div>
+    <div>
+      <div class="streak-num" id="rutiner-streak">0</div>
+      <div class="streak-meta">dager på rad · 80%+ fullført</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">Beste: <span id="rutiner-best-streak" style="color:var(--gold)">0</span> dager</div>
     </div>
-    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="reward-caspara-bar" style="width:0%"></div></div>
+    <div class="progress-ring-wrap" id="rutiner-ring" style="margin-left:auto"></div>
   </div>
-  <div class="reward-card" id="reward-scuf">
-    <div class="reward-name">Scuf Omega</div>
-    <div class="reward-meta">30 dager streak &nbsp;·&nbsp; €239.99</div>
-    <div class="reward-progress">
-      <div class="reward-current" id="reward-scuf-num">0</div>
-      <div class="reward-total">/ 30 dager</div>
+
+  <!-- 28-day calendar -->
+  <div class="section-label">Streak-kalender · trykk for å redigere</div>
+  <div class="card">
+    <div class="contrib-grid" id="streak-calendar"></div>
+    <div style="display:flex;gap:12px;margin-top:12px;font-size:10px;color:var(--muted)">
+      <span>■ Fullført</span><span style="color:var(--muted2)">■ Delvis</span><span>□ Venter</span>
     </div>
-    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="reward-scuf-bar" style="width:0%"></div></div>
+  </div>
+
+  <!-- Rewards -->
+  <div class="section-label">Belønninger</div>
+  <div id="rewards-list"></div>
+  <div class="card">
+    <div class="input-row">
+      <input class="inp" id="reward-name-inp" type="text" placeholder="Belønning"/>
+      <input class="inp" id="reward-days-inp" type="number" placeholder="Dager" style="max-width:90px"/>
+      <button class="btn" onclick="addReward()">+</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="section-label">Statistikk</div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Denne uka</div>
+      <div class="stat-num" id="stat-week">0</div>
+      <div class="stat-label">/ 7 dager fullført</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Denne måneden</div>
+      <div class="stat-num" id="stat-month">0</div>
+      <div class="stat-label">dager 80%+</div>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Fullføringsrate</div>
+      <div class="stat-num val-gold" id="stat-rate">0</div>
+      <div class="stat-label">% av loggede dager</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Ryker oftest</div>
+      <div style="font-size:13px;color:var(--text);margin-top:8px;line-height:1.4" id="stat-missed">—</div>
+    </div>
+  </div>
+
+  <!-- Sober -->
+  <div class="sober-card">
+    <div>
+      <div class="sober-label">Alkoholfri streak</div>
+      <div class="sober-days" id="sober-count-rutiner">0</div>
+      <div class="sober-unit">dager uten alkohol</div>
+    </div>
+    <div class="sober-badge">&#9679;</div>
   </div>
 
   <!-- Routines -->
+  <div class="section-label">Dagens rutiner</div>
   <div class="card">
     <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
-      <span>Dagens rutiner</span>
+      <span>Sjekkliste</span>
       <span id="routine-count" style="font-family:'DM Mono',monospace;color:var(--gold)">0/0</span>
     </div>
     <div id="routine-list"></div>
     <div class="progress-bar-wrap"><div class="progress-bar-fill" id="routine-bar" style="width:0%"></div></div>
-  </div>
-
-  <!-- Streak history -->
-  <div class="section-label">Siste 14 dager</div>
-  <div class="card">
-    <div class="streak-row" id="streak-history"></div>
-    <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:11px;color:var(--muted)">
-      <span id="streak-start-label"></span>
-      <span>I dag</span>
-    </div>
   </div>
 </div>
 
@@ -468,14 +644,40 @@ nav {
   </div>
   <div class="grid2">
     <div class="card">
-      <div class="card-title">Timer</div>
-      <div class="stat-num" id="eco-hours">0</div>
-      <div class="stat-label">denne måneden</div>
+      <div class="card-title">Netto spart</div>
+      <div class="stat-num val-gold" id="eco-saved">0</div>
+      <div class="stat-label">kr denne måneden</div>
     </div>
     <div class="card">
-      <div class="card-title">Dager jobbet</div>
-      <div class="stat-num" id="eco-days">0</div>
-      <div class="stat-label">denne måneden</div>
+      <div class="card-title">Netto igjen</div>
+      <div class="stat-num" id="exp-left">0</div>
+      <div class="stat-label">kr etter utgifter</div>
+    </div>
+  </div>
+
+  <!-- Income chart -->
+  <div class="section-label">Inntekt per måned</div>
+  <div class="card">
+    <div class="eco-chart" id="eco-chart"></div>
+  </div>
+
+  <!-- Savings goal -->
+  <div class="section-label">Sparemål</div>
+  <div class="card">
+    <div class="input-row">
+      <input class="inp" id="savings-goal-inp" type="number" placeholder="Målbeløp (kr)"/>
+      <button class="btn" onclick="saveSavingsGoal()">Lagre mål</button>
+    </div>
+    <div class="savings-progress">
+      <div class="row-between">
+        <span class="label-sm">Fremgang mot mål</span>
+        <span class="val-sm val-gold" id="savings-pct">0%</span>
+      </div>
+      <div class="progress-bar-wrap" style="margin-top:8px"><div class="progress-bar-fill" id="savings-bar" style="width:0%"></div></div>
+      <div class="row-between" style="margin-top:8px">
+        <span class="label-sm" id="savings-current-label">0 kr spart</span>
+        <span class="label-sm" id="savings-target-label">Mål: 0 kr</span>
+      </div>
     </div>
   </div>
 
@@ -507,7 +709,7 @@ nav {
     </div>
     <div class="row-between" style="margin-top:6px">
       <span class="label-sm">Netto igjen etter utgifter</span>
-      <span class="val-sm" id="exp-left">0 kr</span>
+      <span class="val-sm" id="exp-left-detail">0 kr</span>
     </div>
   </div>
 </div>
@@ -545,7 +747,7 @@ nav {
     <div class="card">
       <div class="card-title">Grind fremgang</div>
       <div class="stat-num" id="fotball-grind-done">0</div>
-      <div class="stat-label">/ 21 dager fullført</div>
+      <div class="stat-label" id="fotball-grind-label">/ 6 økter denne uka</div>
       <div class="progress-bar-wrap" style="margin-top:10px"><div class="progress-bar-fill" id="fotball-grind-bar" style="width:0%"></div></div>
     </div>
     <div class="card">
@@ -575,27 +777,19 @@ nav {
     </div>
   </div>
 
-  <!-- Uke-oversikt -->
-  <div class="section-label">Denne uka</div>
-  <div class="card" style="padding:14px 20px">
-    <div id="fotball-week-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px"></div>
+  <!-- Program controls -->
+  <div class="fotball-toggles">
+    <button class="fotball-toggle active" id="toggle-norge" onclick="setFotballPeriod('norge')">Norge</button>
+    <button class="fotball-toggle" id="toggle-danmark" onclick="setFotballPeriod('danmark')">Danmark</button>
+  </div>
+  <div class="fotball-toggles">
+    <button class="fotball-toggle" id="toggle-week" onclick="setFotballView('week')">Uke</button>
+    <button class="fotball-toggle active" id="toggle-day" onclick="setFotballView('day')">Dag</button>
   </div>
 
-  <!-- Day navigator -->
-  <div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 10px">
-    <button class="btn-ghost" style="padding:8px 16px;font-size:18px" onclick="fotballNav(-1)">‹</button>
-    <div style="text-align:center">
-      <div style="font-size:13px;font-weight:500;color:var(--text)" id="fotball-nav-date"></div>
-      <div style="font-size:11px;color:var(--muted);margin-top:2px" id="fotball-nav-label"></div>
-    </div>
-    <button class="btn-ghost" style="padding:8px 16px;font-size:18px" onclick="fotballNav(1)">›</button>
-  </div>
-
-  <!-- Session card -->
-  <div class="card">
-    <div class="card-title" id="fotball-session-title">Dagens økt</div>
-    <div id="fotball-session-content"></div>
-  </div>
+  <!-- Week / day program views -->
+  <div id="fotball-week-view" style="display:none"></div>
+  <div id="fotball-day-view"></div>
 
   <!-- Post-session logging -->
   <div class="section-label">Logg etter økt</div>
@@ -619,6 +813,21 @@ nav {
   <div class="section-label">Øktlogg</div>
   <div class="card">
     <div id="fotball-session-history"></div>
+  </div>
+</div>
+
+<div id="edit-day-overlay" onclick="if(event.target===this)closeEditDay()">
+  <div class="edit-day-sheet" onclick="event.stopPropagation()">
+    <div class="edit-day-header">
+      <div>
+        <div class="edit-day-title" id="edit-day-title">Rediger dag</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px" id="edit-day-sub"></div>
+      </div>
+      <button class="btn-ghost" onclick="closeEditDay()">Lukk</button>
+    </div>
+    <div id="edit-day-list"></div>
+    <div class="progress-bar-wrap" style="margin-top:14px"><div class="progress-bar-fill" id="edit-day-bar" style="width:0%"></div></div>
+    <div style="font-size:11px;color:var(--muted);margin-top:8px;text-align:right" id="edit-day-count"></div>
   </div>
 </div>
 
@@ -768,6 +977,51 @@ async function loadSoberStart() {
   return data?.sober_start;
 }
 
+async function loadRewards() {
+  const { data } = await sb.from('rewards').select('*').order('days_required', { ascending: true });
+  return data || [];
+}
+
+async function ensureDefaultRewards() {
+  const userId = await getUserId();
+  const existing = await loadRewards();
+  const builtins = [
+    { name: 'Caspara Tracksuit', days_required: 14, emoji: '👕', builtin_key: 'caspara' },
+    { name: 'Scuf Omega', days_required: 30, emoji: '🎮', builtin_key: 'scuf' }
+  ];
+  for (const b of builtins) {
+    if (!existing.some(r => r.builtin_key === b.builtin_key)) {
+      await sb.from('rewards').insert({ user_id: userId, ...b });
+    }
+  }
+  return loadRewards();
+}
+
+async function saveReward(name, days) {
+  const userId = await getUserId();
+  const { data } = await sb.from('rewards')
+    .insert({ user_id: userId, name, days_required: days })
+    .select().single();
+  return data;
+}
+
+async function claimReward(id) {
+  await sb.from('rewards').update({ claimed: true }).eq('id', id);
+}
+
+async function loadSavingsGoal() {
+  const { data } = await sb.from('savings_goals').select('target_amount').maybeSingle();
+  return data?.target_amount || 0;
+}
+
+async function saveSavingsGoalDB(amount) {
+  const userId = await getUserId();
+  await sb.from('savings_goals').upsert(
+    { user_id: userId, target_amount: amount },
+    { onConflict: 'user_id' }
+  );
+}
+
 // ── AUTH ──────────────────────────────────────────────────
 let currentUser = null;
 
@@ -842,14 +1096,17 @@ async function initAuth() {
 }
 
 async function initApp() {
-  const [routineData, workDays, expenses, sessionChecks, sessionLogs, weightHistory, soberStart] = await Promise.all([
+  await ensureDefaultRewards();
+  const [routineData, workDays, expenses, sessionChecks, sessionLogs, weightHistory, soberStart, rewards, savingsGoal] = await Promise.all([
     loadAllRoutineChecks(),
     loadWorkDays(),
     loadExpenses(),
     loadSessionChecks(),
     loadAllSessionLogs(),
     loadWeightHistory(),
-    loadSoberStart()
+    loadSoberStart(),
+    loadRewards(),
+    loadSavingsGoal()
   ]);
 
   state.routines = {};
@@ -870,6 +1127,8 @@ async function initApp() {
   });
   state.weightHistory = weightHistory;
   state.soberStart = soberStart || TODAY;
+  state.rewards = rewards;
+  state.savingsGoal = savingsGoal;
 
   renderHome();
   renderRutiner();
@@ -886,7 +1145,10 @@ let state = {
   sessionChecks: {},
   sessionLogs: {},
   weightHistory: [],
+  rewards: [],
+  savingsGoal: 0,
 };
+let editDayDate = null;
 
 // ── ROUTINES CONFIG ───────────────────────────────────────
 const ROUTINES_FELLES = [
@@ -907,6 +1169,7 @@ const ROUTINES_FRIDAG = [
   { id: 'extrawork', label: 'Ekstra AI-arbeid om kvelden', fridag: true },
 ];
 const ALL_ROUTINES = [...ROUTINES_FELLES, ...ROUTINES_FRIDAG];
+const NEXT_KAMP = '2026-06-12';
 
 function todayDayType() {
   return state.dayTypes[TODAY] || 'jobb';
@@ -928,10 +1191,31 @@ function getTodayDone() {
   return state.routines[TODAY] || {};
 }
 
-function completionPct(dateStr) {
+function daysAgo(n) {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d.toISOString().slice(0, 10);
+}
+
+function getDayDeadline(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  d.setDate(d.getDate() + 1);
+  d.setHours(7, 0, 0, 0);
+  return d;
+}
+
+function getRoutinesForDate(dateStr) {
   const type = state.dayTypes[dateStr] || 'jobb';
-  const list = type === 'fridag' ? ALL_ROUTINES : ROUTINES_FELLES;
-  const done = state.routines[dateStr] || {};
+  return type === 'fridag' ? ALL_ROUTINES : ROUTINES_FELLES;
+}
+
+function getDoneForDate(dateStr) {
+  return state.routines[dateStr] || {};
+}
+
+function completionPct(dateStr) {
+  const list = getRoutinesForDate(dateStr);
+  const done = getDoneForDate(dateStr);
   const count = list.filter(r => done[r.id]).length;
   return Math.round((count / list.length) * 100);
 }
@@ -940,16 +1224,19 @@ function isGoodDay(dateStr) {
   return completionPct(dateStr) >= 80;
 }
 
+function getDayStatus(dateStr) {
+  if (isGoodDay(dateStr)) return 'complete';
+  if (new Date() < getDayDeadline(dateStr)) return 'pending';
+  return 'failed';
+}
+
 function calcStreak() {
   let streak = 0;
-  let d = new Date(TODAY);
-  while (true) {
-    const ds = d.toISOString().slice(0,10);
-    if (ds === TODAY && completionPct(ds) < 80) break;
-    if (ds !== TODAY && !isGoodDay(ds)) break;
-    streak++;
-    d.setDate(d.getDate() - 1);
-    if (streak > 365) break;
+  for (let i = 0; i < 365; i++) {
+    const status = getDayStatus(daysAgo(i));
+    if (status === 'complete') streak++;
+    else if (status === 'pending' && i === 0) continue;
+    else break;
   }
   return streak;
 }
@@ -957,11 +1244,200 @@ function calcStreak() {
 function calcBestStreak() {
   let best = 0, cur = 0;
   for (let i = 90; i >= 0; i--) {
-    const d = new Date(); d.setDate(d.getDate() - i);
-    const ds = d.toISOString().slice(0,10);
-    if (isGoodDay(ds)) { cur++; best = Math.max(best, cur); } else cur = 0;
+    const status = getDayStatus(daysAgo(i));
+    if (status === 'complete') { cur++; best = Math.max(best, cur); }
+    else if (status !== 'pending') cur = 0;
   }
   return best;
+}
+
+function renderProgressRing(elId, pct) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const dash = Math.max(0, Math.min(100, pct));
+  el.innerHTML = `<svg viewBox="0 0 36 36">
+    <circle class="ring-bg" cx="18" cy="18" r="15.9"/>
+    <circle class="ring-fill" cx="18" cy="18" r="15.9"
+      stroke-dasharray="${dash} 100" pathLength="100"/>
+  </svg><div class="ring-text">${pct}%</div>`;
+}
+
+function getCalendarCellClass(dateStr) {
+  const status = getDayStatus(dateStr);
+  if (status === 'complete') return 'contrib-done';
+  if (status === 'pending') return 'contrib-pending';
+  const done = getDoneForDate(dateStr);
+  if (Object.keys(done).some(k => done[k])) return 'contrib-partial';
+  if (status === 'failed') return 'contrib-failed';
+  return 'contrib-empty';
+}
+
+function getWeekCompleted() {
+  const monday = new Date();
+  const day = monday.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  monday.setDate(monday.getDate() + diff);
+  let count = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    if (isGoodDay(d.toISOString().slice(0, 10))) count++;
+  }
+  return count;
+}
+
+function getMonthCompleted() {
+  const thisMonth = new Date().toISOString().slice(0, 7);
+  let count = 0;
+  for (let i = 0; i < 31; i++) {
+    const ds = daysAgo(i);
+    if (ds.slice(0, 7) !== thisMonth) break;
+    if (isGoodDay(ds)) count++;
+  }
+  return count;
+}
+
+function getTotalCompletionRate() {
+  const dates = Object.keys(state.routines);
+  if (!dates.length) return 0;
+  const good = dates.filter(ds => isGoodDay(ds)).length;
+  return Math.round((good / dates.length) * 100);
+}
+
+function getMostMissedRoutine() {
+  const missed = {}, totals = {};
+  Object.keys(state.routines).forEach(ds => {
+    const list = getRoutinesForDate(ds);
+    const done = getDoneForDate(ds);
+    list.forEach(r => {
+      totals[r.id] = (totals[r.id] || 0) + 1;
+      if (!done[r.id]) missed[r.id] = (missed[r.id] || 0) + 1;
+    });
+  });
+  let bestId = null, bestMiss = 0;
+  Object.keys(missed).forEach(id => {
+    if (missed[id] > bestMiss) { bestMiss = missed[id]; bestId = id; }
+  });
+  if (!bestId) return null;
+  const routine = ALL_ROUTINES.find(r => r.id === bestId);
+  return routine ? { label: routine.label, miss: bestMiss, total: totals[bestId] } : null;
+}
+
+function getTodayTrainingTitle() {
+  const map = ['Sondag', 'Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lordag'];
+  const key = map[new Date().getDay()];
+  return UKE_NORGE[key]?.title || 'Ingen økt planlagt';
+}
+
+function getNextMilestone() {
+  const streak = calcStreak();
+  const unclaimed = (state.rewards || []).filter(r => !r.claimed);
+  const nextReward = unclaimed.sort((a, b) => a.days_required - b.days_required)
+    .find(r => r.days_required > streak);
+  if (nextReward) return { days: nextReward.days_required - streak, label: nextReward.name };
+  const kampDiff = Math.ceil((new Date(NEXT_KAMP) - new Date(TODAY)) / 86400000);
+  if (kampDiff > 0) return { days: kampDiff, label: 'Neste kamp' };
+  return null;
+}
+
+function spawnConfetti() {
+  const colors = ['#c9a84c', '#e8c97a', '#52c97a', '#f0ede8'];
+  for (let i = 0; i < 40; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.left = Math.random() * 100 + 'vw';
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    p.style.animationDelay = Math.random() * 0.8 + 's';
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 3000);
+  }
+}
+
+function renderRewards() {
+  const streak = calcStreak();
+  const el = document.getElementById('rewards-list');
+  if (!el) return;
+  el.innerHTML = (state.rewards || []).map(r => {
+    const prog = Math.min(streak, r.days_required);
+    const pct = Math.round((prog / r.days_required) * 100);
+    const ready = streak >= r.days_required && !r.claimed;
+    const left = Math.max(0, r.days_required - streak);
+    return `<div class="reward-card${ready ? ' celebrate' : ''}${r.claimed ? ' claimed' : ''}" id="reward-${r.id}">
+      <div class="reward-icon">${r.emoji || '🎁'}</div>
+      <div class="reward-name">${r.name}</div>
+      <div class="reward-meta">${r.days_required} dager streak${left > 0 && !r.claimed ? ' · ' + left + ' igjen' : ''}</div>
+      <div class="reward-progress">
+        <div class="reward-current">${prog}</div>
+        <div class="reward-total">/ ${r.days_required} dager</div>
+      </div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+      <div class="reward-pct">${pct}% ferdig</div>
+      ${ready ? `<button class="btn" style="margin-top:12px;width:100%" onclick="claimRewardBtn('${r.id}')">LØST INN 🎉</button>` : ''}
+      ${r.claimed ? '<div style="font-size:12px;color:var(--green);margin-top:10px">✓ Løst inn</div>' : ''}
+    </div>`;
+  }).join('');
+}
+
+async function claimRewardBtn(id) {
+  await claimReward(id);
+  const r = state.rewards.find(x => x.id === id);
+  if (r) r.claimed = true;
+  spawnConfetti();
+  renderRutiner();
+  renderHome();
+}
+
+async function addReward() {
+  const name = document.getElementById('reward-name-inp').value.trim();
+  const days = parseInt(document.getElementById('reward-days-inp').value, 10);
+  if (!name || !days) return;
+  const row = await saveReward(name, days);
+  state.rewards.push(row);
+  document.getElementById('reward-name-inp').value = '';
+  document.getElementById('reward-days-inp').value = '';
+  renderRutiner();
+}
+
+function openEditDay(dateStr) {
+  editDayDate = dateStr;
+  document.getElementById('edit-day-overlay').classList.add('open');
+  renderEditDayModal();
+}
+
+function closeEditDay() {
+  editDayDate = null;
+  document.getElementById('edit-day-overlay').classList.remove('open');
+}
+
+function renderEditDayModal() {
+  if (!editDayDate) return;
+  const routines = getRoutinesForDate(editDayDate);
+  const done = getDoneForDate(editDayDate);
+  const doneCount = routines.filter(r => done[r.id]).length;
+  const pct = Math.round((doneCount / routines.length) * 100);
+  const d = new Date(editDayDate + 'T12:00:00');
+  const label = d.toLocaleDateString('nb-NO', { weekday: 'long', day: 'numeric', month: 'long' });
+  document.getElementById('edit-day-title').textContent = 'Rediger ' + label.charAt(0).toUpperCase() + label.slice(1);
+  document.getElementById('edit-day-sub').textContent = getDayStatus(editDayDate) === 'complete' ? '✓ Fullført' : completionPct(editDayDate) + '% fullført';
+  document.getElementById('edit-day-list').innerHTML = routines.map(r => `
+    <div class="routine-item routine-item-lg${done[r.id] ? ' done' : ''}" onclick="toggleEditRoutine('${r.id}')">
+      <div class="routine-check routine-check-lg">
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor"><polyline points="2 6 5 9 10 3"/></svg>
+      </div>
+      <span class="routine-label">${r.label}</span>
+    </div>`).join('');
+  document.getElementById('edit-day-bar').style.width = pct + '%';
+  document.getElementById('edit-day-count').textContent = doneCount + '/' + routines.length + ' fullført';
+}
+
+async function toggleEditRoutine(id) {
+  const done = getDoneForDate(editDayDate);
+  done[id] = !done[id];
+  state.routines[editDayDate] = done;
+  await saveRoutineChecks(editDayDate, done, state.dayTypes[editDayDate] || 'jobb');
+  renderEditDayModal();
+  renderRutiner();
+  renderHome();
 }
 
 // ── RENDER HOME ───────────────────────────────────────────
@@ -969,43 +1445,37 @@ function renderHome() {
   const h = new Date().getHours();
   const greet = h < 12 ? 'God morgen' : h < 18 ? 'God ettermiddag' : 'God kveld';
   document.getElementById('home-greeting').textContent = greet;
-
-  const opts = { weekday:'long', day:'numeric', month:'long' };
-  document.getElementById('home-date').textContent = new Date().toLocaleDateString('nb-NO', opts);
+  document.getElementById('home-date').textContent = new Date().toLocaleDateString('nb-NO', { weekday: 'long', day: 'numeric', month: 'long' });
 
   const pct = completionPct(TODAY);
-  document.getElementById('home-pct').textContent = pct;
+  renderProgressRing('home-ring', pct);
   document.getElementById('home-bar').style.width = pct + '%';
 
   const routines = getTodayRoutines();
   const done = getTodayDone();
-  const doneCount = routines.filter(r => done[r.id]).length;
-  const left = routines.length - doneCount;
+  const left = routines.length - routines.filter(r => done[r.id]).length;
   document.getElementById('home-left').textContent = left > 0 ? left + ' rutiner igjen i dag' : 'Alle rutiner fullført i dag 🔥';
+
+  document.getElementById('home-training').textContent = getTodayTrainingTitle();
+  document.getElementById('home-focus-sub').textContent = left > 0 ? left + ' rutiner gjenstår · ' + pct + '% fullført' : 'Rutiner done — fokus på trening';
+
+  const milestone = getNextMilestone();
+  if (milestone) {
+    document.getElementById('home-milestone-days').textContent = milestone.days;
+    document.getElementById('home-milestone-label').textContent = 'dager til ' + milestone.label;
+  }
 
   const streak = calcStreak();
   document.getElementById('home-streak').textContent = streak;
   document.getElementById('sober-count').textContent = soberDays();
   document.getElementById('home-best-streak').textContent = calcBestStreak();
+  document.getElementById('home-month-days').textContent = getMonthCompleted();
 
-  const thisMonth = new Date().toISOString().slice(0,7);
-  let monthGood = 0;
-  for (let i = 0; i < 31; i++) {
-    const d = new Date(); d.setDate(d.getDate() - i);
-    if (d.toISOString().slice(0,7) !== thisMonth) break;
-    if (isGoodDay(d.toISOString().slice(0,10))) monthGood++;
-  }
-  document.getElementById('home-month-days').textContent = monthGood;
-
-  // Quick habits
   const quickList = getTodayRoutines().slice(0, 6);
-  const hEl = document.getElementById('home-habits');
-  hEl.innerHTML = quickList.map(r => {
+  document.getElementById('home-habits').innerHTML = quickList.map(r => {
     const isDone = done[r.id];
     return `<div class="habit-pill${isDone ? ' done' : ''}" onclick="quickToggle('${r.id}')">
-      <div class="habit-pill-dot"></div>
-      ${r.label}
-    </div>`;
+      <div class="habit-pill-dot"></div>${r.label}</div>`;
   }).join('');
 }
 
@@ -1022,45 +1492,47 @@ async function quickToggle(id) {
 function renderRutiner() {
   const type = todayDayType();
   document.getElementById('daytype-btn').textContent = type === 'jobb' ? 'Jobbdag' : 'Fridag';
-  const opts = { weekday:'long', day:'numeric', month:'long' };
-  document.getElementById('rutiner-date').textContent = new Date().toLocaleDateString('nb-NO', opts);
+  document.getElementById('rutiner-date').textContent = new Date().toLocaleDateString('nb-NO', { weekday: 'long', day: 'numeric', month: 'long' });
 
   const routines = getTodayRoutines();
   const done = getTodayDone();
   const doneCount = routines.filter(r => done[r.id]).length;
   const pct = Math.round((doneCount / routines.length) * 100);
 
+  const streak = calcStreak();
+  document.getElementById('rutiner-streak').textContent = streak;
+  document.getElementById('rutiner-best-streak').textContent = calcBestStreak();
+  renderProgressRing('rutiner-ring', pct);
+
+  document.getElementById('streak-calendar').innerHTML = Array.from({ length: 28 }, (_, i) => {
+    const ds = daysAgo(27 - i);
+    const cls = getCalendarCellClass(ds);
+    const d = new Date(ds + 'T12:00:00');
+    const tip = d.toLocaleDateString('nb-NO', { day: 'numeric', month: 'short' }) + ' · ' + completionPct(ds) + '%';
+    return `<div class="contrib-cell ${cls}" title="${tip}" onclick="openEditDay('${ds}')"></div>`;
+  }).join('');
+
+  renderRewards();
+
+  document.getElementById('stat-week').textContent = getWeekCompleted();
+  document.getElementById('stat-month').textContent = getMonthCompleted();
+  document.getElementById('stat-rate').textContent = getTotalCompletionRate();
+  const missed = getMostMissedRoutine();
+  document.getElementById('stat-missed').textContent = missed
+    ? `${missed.label} (${missed.miss}/${missed.total} ganger)`
+    : 'Ikke nok data ennå';
+  document.getElementById('sober-count-rutiner').textContent = soberDays();
+
   document.getElementById('routine-count').textContent = doneCount + '/' + routines.length;
   document.getElementById('routine-bar').style.width = pct + '%';
-
   document.getElementById('routine-list').innerHTML = routines.map(r => `
-    <div class="routine-item${done[r.id] ? ' done' : ''}" onclick="toggleRoutine('${r.id}')">
-      <div class="routine-check">
+    <div class="routine-item routine-item-lg${done[r.id] ? ' done' : ''}" onclick="toggleRoutine('${r.id}')">
+      <div class="routine-check routine-check-lg">
         <svg viewBox="0 0 12 12" fill="none" stroke="currentColor"><polyline points="2 6 5 9 10 3"/></svg>
       </div>
       <span class="routine-label">${r.label}</span>
       ${r.fridag ? '<span class="routine-tag fridag">Fridag</span>' : ''}
-    </div>
-  `).join('');
-
-  // Streak history 14 days
-  const histEl = document.getElementById('streak-history');
-  const dots = [];
-  for (let i = 13; i >= 0; i--) {
-    const d = new Date(); d.setDate(d.getDate() - i);
-    const ds = d.toISOString().slice(0,10);
-    const cls = ds === TODAY ? (pct >= 80 ? 'done' : '') : isGoodDay(ds) ? 'done' : (state.routines[ds] ? 'partial' : '');
-    dots.push(`<div class="streak-dot ${cls}" title="${ds}"></div>`);
-  }
-  histEl.innerHTML = dots.join('');
-  const d14 = new Date(); d14.setDate(d14.getDate() - 13);
-  document.getElementById('streak-start-label').textContent = d14.toLocaleDateString('nb-NO', { day:'numeric', month:'short' });
-
-  const streak = calcStreak();
-  document.getElementById('reward-caspara-num').textContent = Math.min(streak, 14);
-  document.getElementById('reward-caspara-bar').style.width = Math.min((streak/14)*100, 100) + '%';
-  document.getElementById('reward-scuf-num').textContent = Math.min(streak, 30);
-  document.getElementById('reward-scuf-bar').style.width = Math.min((streak/30)*100, 100) + '%';
+    </div>`).join('');
 }
 
 async function toggleRoutine(id) {
@@ -1080,24 +1552,58 @@ function soberDays() {
 }
 
 // ── ECONOMY ───────────────────────────────────────────────
-function renderEconomi() {
-  const month = new Date().toLocaleDateString('nb-NO', { month:'long', year:'numeric' });
-  document.getElementById('okonomi-month').textContent = month;
+function getMonthNet(yearMonth) {
+  const days = state.workDays.filter(d => d.date.startsWith(yearMonth));
+  const gross = days.reduce((s, d) => s + d.hours * d.rate, 0);
+  return Math.round(gross * (1 - 0.09 - 0.02));
+}
 
-  const thisMonth = new Date().toISOString().slice(0,7);
+function renderEconomi() {
+  document.getElementById('okonomi-month').textContent = new Date().toLocaleDateString('nb-NO', { month: 'long', year: 'numeric' });
+
+  const thisMonth = new Date().toISOString().slice(0, 7);
   const monthDays = state.workDays.filter(d => d.date.startsWith(thisMonth));
-  const gross = monthDays.reduce((s,d) => s + d.hours * d.rate, 0);
-  const tax = 0.09; const pension = 0.02;
-  const net = Math.round(gross * (1 - tax - pension));
+  const gross = monthDays.reduce((s, d) => s + d.hours * d.rate, 0);
+  const net = getMonthNet(thisMonth);
+  const totalExp = state.expenses.reduce((s, e) => s + e.amt, 0);
+  const saved = net - totalExp;
 
   document.getElementById('eco-gross').textContent = Math.round(gross).toLocaleString('nb-NO');
   document.getElementById('eco-net').textContent = net.toLocaleString('nb-NO');
-  document.getElementById('eco-hours').textContent = monthDays.reduce((s,d) => s + d.hours, 0);
-  document.getElementById('eco-days').textContent = monthDays.length;
+  document.getElementById('eco-saved').textContent = saved.toLocaleString('nb-NO');
+  document.getElementById('exp-left').textContent = saved.toLocaleString('nb-NO');
+  document.getElementById('exp-left-detail').textContent = saved.toLocaleString('nb-NO') + ' kr';
+  document.getElementById('exp-total').textContent = totalExp.toLocaleString('nb-NO') + ' kr';
 
-  const logEl = document.getElementById('eco-log');
-  const recent = [...state.workDays].reverse().slice(0,8);
-  logEl.innerHTML = recent.length ? recent.map(d => {
+  const chartEl = document.getElementById('eco-chart');
+  const months = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    months.push(d.toISOString().slice(0, 7));
+  }
+  const values = months.map(m => getMonthNet(m));
+  const maxVal = Math.max(...values, 1);
+  chartEl.innerHTML = months.map((m, i) => {
+    const h = Math.round((values[i] / maxVal) * 100);
+    const label = new Date(m + '-01').toLocaleDateString('nb-NO', { month: 'short' });
+    return `<div class="eco-bar-col">
+      <div class="eco-bar-val">${(values[i] / 1000).toFixed(0)}k</div>
+      <div class="eco-bar" style="height:${Math.max(h, 4)}%"></div>
+      <div class="eco-bar-label">${label}</div>
+    </div>`;
+  }).join('');
+
+  const goal = state.savingsGoal || 0;
+  const goalPct = goal > 0 ? Math.min(100, Math.round((saved / goal) * 100)) : 0;
+  document.getElementById('savings-goal-inp').value = goal || '';
+  document.getElementById('savings-pct').textContent = goalPct + '%';
+  document.getElementById('savings-bar').style.width = goalPct + '%';
+  document.getElementById('savings-current-label').textContent = saved.toLocaleString('nb-NO') + ' kr spart';
+  document.getElementById('savings-target-label').textContent = 'Mål: ' + goal.toLocaleString('nb-NO') + ' kr';
+
+  const recent = [...state.workDays].reverse().slice(0, 8);
+  document.getElementById('eco-log').innerHTML = recent.length ? recent.map(d => {
     const amt = Math.round(d.hours * d.rate);
     return `<div class="log-item">
       <span class="log-date">${d.date} &nbsp; ${d.hours}t × ${d.rate}kr</span>
@@ -1108,10 +1614,6 @@ function renderEconomi() {
     </div>`;
   }).join('') : '<div style="color:var(--muted);font-size:13px;padding:10px 0">Ingen dager logget ennå</div>';
 
-  const totalExp = state.expenses.reduce((s,e) => s + e.amt, 0);
-  document.getElementById('exp-total').textContent = totalExp.toLocaleString('nb-NO') + ' kr';
-  document.getElementById('exp-left').textContent = (net - totalExp).toLocaleString('nb-NO') + ' kr';
-
   document.getElementById('expense-list').innerHTML = state.expenses.map(e => `
     <div class="expense-item">
       <span class="expense-name">${e.name}</span>
@@ -1119,8 +1621,15 @@ function renderEconomi() {
         <span class="expense-amt">${e.amt.toLocaleString('nb-NO')} kr</span>
         <button class="log-del" onclick="delExpense('${e.id}')">×</button>
       </span>
-    </div>
-  `).join('');
+    </div>`).join('');
+}
+
+async function saveSavingsGoal() {
+  const amt = parseFloat(document.getElementById('savings-goal-inp').value);
+  if (!amt || amt <= 0) return;
+  await saveSavingsGoalDB(amt);
+  state.savingsGoal = amt;
+  renderEconomi();
 }
 
 async function logWorkDay() {
@@ -1157,307 +1666,242 @@ async function delExpense(id) {
 }
 
 // ── FOOTBALL ─────────────────────────────────────────────
-const PROGRAM = {
-  '2026-06-08': {
-    title: 'Lagtrening',
-    tasks: [
-      { id: 'sprint_mek', label: 'Sprint mechanics (10 min) — A-skip, B-skip, høye kneløp, pogo jumps' },
-      { id: 'lagtrening', label: 'Lagtrening Blåmann FK 18:00–19:00' },
-      { id: 'mat_etter', label: 'Stort måltid innen 60 min etter trening' },
-    ]
-  },
-  '2026-06-09': {
-    title: 'Gym upper A + rolig løp',
-    tasks: [
-      { id: 'bench', label: 'Bench press / DB press — 4 × 6' },
-      { id: 'row', label: 'Barbell row — 4 × 8' },
-      { id: 'ohp', label: 'Overhead press — 3 × 8' },
-      { id: 'chinup', label: 'Weighted chin-ups — 4 × 6' },
-      { id: 'face', label: 'Face pulls — 3 × 15' },
-      { id: 'farmer', label: 'Farmer walks — 3 × 40m' },
-      { id: 'lop', label: 'Rolig løpetur 35–40 min' },
-    ]
-  },
-  '2026-06-10': {
-    title: 'Gym lower A',
-    tasks: [
-      { id: 'squat', label: 'Barbell back squat — 4 × 5, tungt' },
-      { id: 'rdl', label: 'Romanian deadlift — 4 × 8' },
-      { id: 'bss', label: 'Bulgarian split squat — 3 × 8/side' },
-      { id: 'thrust', label: 'Barbell hip thrust — 3 × 10' },
-      { id: 'calf', label: 'Calf raises — 4 × 15' },
-      { id: 'pullup', label: 'Wide-grip pull-ups — 3 × maks (finisher)' },
-    ]
-  },
-  '2026-06-11': {
-    title: 'Gym lower B',
-    tasks: [
-      { id: 'bss2', label: 'Bulgarian split squat — 4 × 8/side' },
-      { id: 'rdl2', label: 'Romanian deadlift — 4 × 8' },
-      { id: 'calf2', label: 'Calf raises — 3 × 15' },
-      { id: 'leg_raise', label: 'Hanging leg raises — 3 × 12' },
-      { id: 'pallof', label: 'Pallof press — 3 × 10/side' },
-      { id: 'banded', label: 'Banded marching — 3 × 20' },
-      { id: 'dbrow', label: 'Dumbbell rows — 3 × 10/side' },
-      { id: 'spress', label: 'Skulderpress — 3 × 10' },
-    ]
-  },
-  '2026-06-12': {
-    title: 'Kamp — vs Ulfstind 3',
-    tasks: [
-      { id: 'frokost', label: 'Frokost 3–4 timer før kamp' },
-      { id: 'snack', label: 'Snack 1–1,5 time før kamp' },
-      { id: 'vann', label: '1,5L vann fra du våkner' },
-      { id: 'warmup', label: 'Aktiv oppvarming 15 min' },
-      { id: 'kamp', label: 'Kamp 19:15' },
-      { id: 'mat_k', label: 'Stort måltid innen 60 min etter kamp' },
-    ]
-  },
-  '2026-06-13': {
-    title: 'Sprint + plyometrics',
-    tasks: [
-      { id: 'wu', label: 'Dynamisk oppvarming 10 min (high knees, butt kicks, A-skips, build-ups)' },
-      { id: 's10', label: '10m sprints — 4 reps, 90 sek pause' },
-      { id: 's20', label: '20m sprints — 4 reps, 90 sek pause' },
-      { id: 's40', label: '40m sprints — 3 reps, 2 min pause' },
-      { id: 'broad', label: 'Broad jumps — 4 × 5' },
-      { id: 'lateral', label: 'Lateral bounds — 3 × 6/side' },
-      { id: 'depth', label: 'Depth jumps — 3 × 5' },
-    ]
-  },
-  '2026-06-14': { title: 'Hvile', tasks: [{ id: 'rest', label: 'Obligatorisk hvile — ingen trening' }] },
-  '2026-06-15': {
-    title: 'Lagtrening',
-    tasks: [
-      { id: 'sprint_mek', label: 'Sprint mechanics (10 min)' },
-      { id: 'lagtrening', label: 'Lagtrening Blåmann FK 18:00–19:00' },
-      { id: 'mat_etter', label: 'Stort måltid innen 60 min' },
-    ]
-  },
-  '2026-06-16': {
-    title: 'Gym lower A + rolig løp',
-    tasks: [
-      { id: 'squat', label: 'Barbell back squat — 4 × 5' },
-      { id: 'rdl', label: 'Romanian deadlift — 4 × 8' },
-      { id: 'bss', label: 'Bulgarian split squat — 3 × 8/side' },
-      { id: 'thrust', label: 'Barbell hip thrust — 3 × 10' },
-      { id: 'calf', label: 'Calf raises — 4 × 15' },
-      { id: 'pullup', label: 'Wide-grip pull-ups — 3 × maks' },
-      { id: 'lop', label: 'Rolig løpetur 35–40 min' },
-    ]
-  },
-  '2026-06-17': {
-    title: 'Gym upper A',
-    tasks: [
-      { id: 'bench', label: 'Bench press / DB press — 4 × 6' },
-      { id: 'row', label: 'Barbell row — 4 × 8' },
-      { id: 'ohp', label: 'Overhead press — 3 × 8' },
-      { id: 'chinup', label: 'Weighted chin-ups — 4 × 6' },
-      { id: 'face', label: 'Face pulls — 3 × 15' },
-      { id: 'farmer', label: 'Farmer walks — 3 × 40m' },
-    ]
-  },
-  '2026-06-18': {
-    title: 'Gym lower B',
-    tasks: [
-      { id: 'bss2', label: 'Bulgarian split squat — 4 × 8/side' },
-      { id: 'rdl2', label: 'Romanian deadlift — 4 × 8' },
-      { id: 'calf2', label: 'Calf raises — 3 × 15' },
-      { id: 'leg_raise', label: 'Hanging leg raises — 3 × 12' },
-      { id: 'pallof', label: 'Pallof press — 3 × 10/side' },
-      { id: 'banded', label: 'Banded marching — 3 × 20' },
-      { id: 'dbrow', label: 'Dumbbell rows — 3 × 10/side' },
-      { id: 'spress', label: 'Skulderpress — 3 × 10' },
-    ]
-  },
-  '2026-06-19': {
-    title: 'Sprint + plyometrics',
-    tasks: [
-      { id: 'wu', label: 'Dynamisk oppvarming 10 min' },
-      { id: 's10', label: '10m sprints — 4 reps, 90 sek pause' },
-      { id: 's20', label: '20m sprints — 4 reps, 90 sek pause' },
-      { id: 's40', label: '40m sprints — 3 reps, 2 min pause' },
-      { id: 'broad', label: 'Broad jumps — 4 × 5' },
-      { id: 'lateral', label: 'Lateral bounds — 3 × 6/side' },
-      { id: 'depth', label: 'Depth jumps — 3 × 5' },
-    ]
-  },
-  '2026-06-20': {
-    title: 'Baneøkt',
-    tasks: [
-      { id: 'mek', label: 'Sprint mechanics 10 min (A-skip, B-skip, pogo jumps)' },
-      { id: 'ts', label: 'Touch & sprint — 12 reps' },
-      { id: 'cut', label: 'Inside cut — 10/fot' },
-      { id: 'croqueta', label: 'La croqueta — sakte til raskere' },
-      { id: 'shuttle', label: 'Shuttle run 25m — 8 reps, 30 sek pause' },
-      { id: 'intervall', label: '6 × 4 min på 85–90%, 2 min pause' },
-    ]
-  },
-  '2026-06-21': { title: 'Hvile', tasks: [{ id: 'rest', label: 'Obligatorisk hvile — ingen trening' }] },
-  '2026-06-22': {
-    title: 'Lagtrening',
-    tasks: [
-      { id: 'sprint_mek', label: 'Sprint mechanics (10 min)' },
-      { id: 'lagtrening', label: 'Lagtrening Blåmann FK 18:00–19:00' },
-      { id: 'mat_etter', label: 'Stort måltid innen 60 min' },
-    ]
-  },
-  '2026-06-23': {
-    title: 'Gym lower A + rolig løp',
-    tasks: [
-      { id: 'squat', label: 'Barbell back squat — 4 × 5' },
-      { id: 'rdl', label: 'Romanian deadlift — 4 × 8' },
-      { id: 'bss', label: 'Bulgarian split squat — 3 × 8/side' },
-      { id: 'thrust', label: 'Barbell hip thrust — 3 × 10' },
-      { id: 'calf', label: 'Calf raises — 4 × 15' },
-      { id: 'pullup', label: 'Wide-grip pull-ups — 3 × maks' },
-      { id: 'lop', label: 'Rolig løpetur 35–40 min' },
-    ]
-  },
-  '2026-06-24': {
-    title: 'Gym upper A',
-    tasks: [
-      { id: 'bench', label: 'Bench press / DB press — 4 × 6' },
-      { id: 'row', label: 'Barbell row — 4 × 8' },
-      { id: 'ohp', label: 'Overhead press — 3 × 8' },
-      { id: 'chinup', label: 'Weighted chin-ups — 4 × 6' },
-      { id: 'face', label: 'Face pulls — 3 × 15' },
-      { id: 'farmer', label: 'Farmer walks — 3 × 40m' },
-    ]
-  },
-  '2026-06-25': {
-    title: 'Gym lower B',
-    tasks: [
-      { id: 'bss2', label: 'Bulgarian split squat — 4 × 8/side' },
-      { id: 'rdl2', label: 'Romanian deadlift — 4 × 8' },
-      { id: 'calf2', label: 'Calf raises — 3 × 15' },
-      { id: 'leg_raise', label: 'Hanging leg raises — 3 × 12' },
-      { id: 'pallof', label: 'Pallof press — 3 × 10/side' },
-      { id: 'banded', label: 'Banded marching — 3 × 20' },
-      { id: 'dbrow', label: 'Dumbbell rows — 3 × 10/side' },
-      { id: 'spress', label: 'Skulderpress — 3 × 10' },
-    ]
-  },
-  '2026-06-26': {
-    title: 'Sprint + plyometrics',
-    tasks: [
-      { id: 'wu', label: 'Dynamisk oppvarming 10 min' },
-      { id: 's10', label: '10m sprints — 4 reps, 90 sek pause' },
-      { id: 's20', label: '20m sprints — 4 reps, 90 sek pause' },
-      { id: 's40', label: '40m sprints — 3 reps, 2 min pause' },
-      { id: 'broad', label: 'Broad jumps — 4 × 5' },
-      { id: 'lateral', label: 'Lateral bounds — 3 × 6/side' },
-      { id: 'depth', label: 'Depth jumps — 3 × 5' },
-    ]
-  },
-  '2026-06-27': {
-    title: 'Baneøkt',
-    tasks: [
-      { id: 'mek', label: 'Sprint mechanics 10 min' },
-      { id: 'ts', label: 'Touch & sprint — 12 reps' },
-      { id: 'cut', label: 'Inside cut — 10/fot' },
-      { id: 'croqueta', label: 'La croqueta' },
-      { id: 'shuttle', label: 'Shuttle run 25m — 8 reps, 30 sek pause' },
-      { id: 'intervall', label: '6 × 4 min på 85–90%, 2 min pause' },
-    ]
-  },
-  '2026-06-28': { title: 'Hvile', tasks: [{ id: 'rest', label: 'Obligatorisk hvile — ingen trening' }] },
+const UKE_DAGER = ['Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lordag', 'Sondag'];
+const UKE_SHORT = {
+  Mandag: 'Man', Tirsdag: 'Tir', Onsdag: 'Ons', Torsdag: 'Tor',
+  Fredag: 'Fre', Lordag: 'Lør', Sondag: 'Søn'
 };
 
-const NEXT_KAMP = '2026-06-12';
-let fotballOffset = 0;
-let selectedEnergy = 0;
+let fotballPeriod = 'norge';
+let fotballView = 'day';
+let fotballSelectedDay = null;
+let fotballSelectedDate = null;
 
-function fotballDateStr(offset) {
-  const d = new Date(); d.setDate(d.getDate() + offset);
-  return d.toISOString().slice(0,10);
+function getActiveProgram() {
+  return fotballPeriod === 'danmark' ? UKE_DANMARK : UKE_NORGE;
 }
 
-function fotballNav(dir) { fotballOffset += dir; renderFotball(); }
+function getWeekdayKey(dateStr) {
+  const map = ['Sondag', 'Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lordag'];
+  return map[new Date(dateStr + 'T12:00:00').getDay()];
+}
 
-function fotballJumpTo(dateStr) {
-  const diff = Math.ceil((new Date(dateStr) - new Date(TODAY)) / 86400000);
-  fotballOffset = diff;
+function getWeekDates() {
+  const monday = new Date();
+  const day = monday.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  monday.setDate(monday.getDate() + diff);
+  return UKE_DAGER.map((key, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return { key, dateStr: d.toISOString().slice(0, 10), label: UKE_SHORT[key] };
+  });
+}
+
+function getDayData(dayKey) {
+  return getActiveProgram()[dayKey] || null;
+}
+
+function parseItem(item) {
+  const sep = item.indexOf(' — ');
+  if (sep === -1) return { name: item, detail: '' };
+  return { name: item.slice(0, sep), detail: item.slice(sep + 3) };
+}
+
+function exerciseId(dayKey, blockIdx, itemIdx) {
+  const prefix = fotballPeriod === 'danmark' ? 'd' : 'n';
+  return `${prefix}_${dayKey}_${blockIdx}_${itemIdx}`;
+}
+
+function getAllExercises(dayData, dayKey) {
+  if (!dayData) return [];
+  return dayData.blocks.flatMap((block, bi) =>
+    block.items.map((item, ii) => {
+      const parsed = parseItem(item);
+      return { id: exerciseId(dayKey, bi, ii), name: parsed.name, detail: parsed.detail };
+    })
+  );
+}
+
+function getDayProgress(dateStr, dayKey) {
+  const dayData = getDayData(dayKey);
+  const exercises = getAllExercises(dayData, dayKey);
+  if (!exercises.length) return { done: 0, total: 0, pct: 0 };
+  const checks = state.sessionChecks[dateStr] || {};
+  const done = exercises.filter(e => checks[e.id]).length;
+  const total = exercises.length;
+  return { done, total, pct: Math.round((done / total) * 100) };
+}
+
+function isDayDone(dateStr, dayKey) {
+  const { done, total } = getDayProgress(dateStr, dayKey);
+  if (!total) return false;
+  return done / total >= 0.8;
+}
+
+function isTrainingDay(dayKey) {
+  const dayData = getDayData(dayKey);
+  if (!dayData) return false;
+  return dayData.type !== 'rest';
+}
+
+function setFotballPeriod(period) {
+  fotballPeriod = period;
+  document.getElementById('toggle-norge').classList.toggle('active', period === 'norge');
+  document.getElementById('toggle-danmark').classList.toggle('active', period === 'danmark');
   renderFotball();
-  document.getElementById('fotball-session-title').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
-async function toggleFotballTask(dateStr, taskId) {
+function setFotballView(view) {
+  fotballView = view;
+  document.getElementById('toggle-week').classList.toggle('active', view === 'week');
+  document.getElementById('toggle-day').classList.toggle('active', view === 'day');
+  document.getElementById('fotball-week-view').style.display = view === 'week' ? 'block' : 'none';
+  document.getElementById('fotball-day-view').style.display = view === 'day' ? 'block' : 'none';
+  renderFotball();
+}
+
+function selectFotballDay(dayKey, dateStr) {
+  fotballSelectedDay = dayKey;
+  fotballSelectedDate = dateStr;
+  setFotballView('day');
+}
+
+function searchExercise(name) {
+  window.open('https://www.google.com/search?q=' + encodeURIComponent(name + ' form'), '_blank');
+}
+
+async function toggleFotballExercise(dateStr, exerciseId) {
   const done = state.sessionChecks[dateStr] || {};
-  done[taskId] = !done[taskId];
+  done[exerciseId] = !done[exerciseId];
   state.sessionChecks[dateStr] = done;
   await saveSessionChecks(dateStr, done);
   renderFotball();
 }
 
 async function setEnergy(val) {
-  const dateStr = fotballDateStr(fotballOffset);
-  const log = state.sessionLogs[dateStr] || {};
+  const log = state.sessionLogs[TODAY] || {};
   log.energy = val;
-  state.sessionLogs[dateStr] = log;
-  await saveSessionLogDB(dateStr, val, log.note || null, log.weight || null);
+  state.sessionLogs[TODAY] = log;
+  await saveSessionLogDB(TODAY, val, log.note || null, log.weight || null);
   renderEnergyBtns(val);
 }
 
 function renderEnergyBtns(val) {
-  document.querySelectorAll('.energy-btn').forEach((b,i) => b.classList.toggle('active', i+1 === val));
+  document.querySelectorAll('.energy-btn').forEach((b, i) => b.classList.toggle('active', i + 1 === val));
 }
 
 async function saveSessionLog() {
-  const dateStr = fotballDateStr(fotballOffset);
   const note = document.getElementById('session-note').value.trim();
   const weight = parseFloat(document.getElementById('weight-inp').value);
-  const log = state.sessionLogs[dateStr] || {};
+  const log = state.sessionLogs[TODAY] || {};
   if (note) log.note = note;
   if (!isNaN(weight)) {
     log.weight = weight;
-    const ex = state.weightHistory.findIndex(w => w.date === dateStr);
+    const ex = state.weightHistory.findIndex(w => w.date === TODAY);
     if (ex >= 0) state.weightHistory[ex].weight = weight;
-    else state.weightHistory.push({ date: dateStr, weight });
+    else state.weightHistory.push({ date: TODAY, weight });
     state.weightHistory.sort((a, b) => a.date.localeCompare(b.date));
-    await saveWeightEntry(dateStr, weight);
+    await saveWeightEntry(TODAY, weight);
   }
-  state.sessionLogs[dateStr] = log;
-  await saveSessionLogDB(dateStr, log.energy || null, log.note || null, log.weight || null);
+  state.sessionLogs[TODAY] = log;
+  await saveSessionLogDB(TODAY, log.energy || null, log.note || null, log.weight || null);
   document.getElementById('session-note').value = '';
   document.getElementById('weight-inp').value = '';
   renderFotball();
 }
 
-function isDayDone(dateStr) {
-  const session = PROGRAM[dateStr];
-  if (!session) return false;
-  const done = state.sessionChecks[dateStr] || {};
-  return session.tasks.filter(t => done[t.id]).length / session.tasks.length >= 0.8;
+function renderExerciseRow(dateStr, ex) {
+  const checks = state.sessionChecks[dateStr] || {};
+  const isDone = !!checks[ex.id];
+  const safeName = ex.name.replace(/'/g, "\\'");
+  return `<div class="fotball-exercise${isDone ? ' done' : ''}" onclick="toggleFotballExercise('${dateStr}','${ex.id}')">
+    <div class="fotball-ex-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor"><polyline points="2 6 5 9 10 3"/></svg></div>
+    <div class="fotball-ex-info">
+      <div class="fotball-ex-name fotball-ex-label">${ex.name}</div>
+      <div class="fotball-ex-detail">${ex.detail}</div>
+    </div>
+    <button class="fotball-ex-search" onclick="event.stopPropagation();searchExercise('${safeName}')" aria-label="Søk ${ex.name}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+  </div>`;
+}
+
+function renderFotballWeekView() {
+  const weekDates = getWeekDates();
+  const el = document.getElementById('fotball-week-view');
+  el.innerHTML = `<div class="section-label">Ukeprogram</div>
+    <div class="fotball-week-grid">${weekDates.map(({ key, dateStr, label }) => {
+      const dayData = getDayData(key);
+      const { done, total } = getDayProgress(dateStr, key);
+      const isToday = dateStr === TODAY;
+      const doneCls = isDayDone(dateStr, key) ? ' done' : '';
+      const todayCls = isToday ? ' today' : '';
+      return `<div class="fotball-week-card${todayCls}${doneCls}" onclick="selectFotballDay('${key}','${dateStr}')">
+        <div class="fwc-day">${label}${isToday ? ' · I dag' : ''}</div>
+        <div class="fwc-title">${dayData ? dayData.title : '—'}</div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${total ? Math.round((done / total) * 100) : 0}%"></div></div>
+        <div class="fwc-progress">${done}/${total} fullført</div>
+      </div>`;
+    }).join('')}</div>`;
+}
+
+function renderFotballDayView() {
+  if (!fotballSelectedDay) fotballSelectedDay = getWeekdayKey(TODAY);
+  if (!fotballSelectedDate) {
+    const match = getWeekDates().find(w => w.key === fotballSelectedDay);
+    fotballSelectedDate = match ? match.dateStr : TODAY;
+  }
+
+  const dayData = getDayData(fotballSelectedDay);
+  const { done, total, pct } = getDayProgress(fotballSelectedDate, fotballSelectedDay);
+  const d = new Date(fotballSelectedDate + 'T12:00:00');
+  const dayName = d.toLocaleDateString('nb-NO', { weekday: 'long', day: 'numeric', month: 'long' });
+  const isToday = fotballSelectedDate === TODAY;
+
+  let content = '';
+  if (!dayData) {
+    content = '<div style="color:var(--muted);font-size:13px;padding:6px 0">Ingen økt planlagt.</div>';
+  } else {
+    content = dayData.blocks.map((block, bi) => `
+      <div class="fotball-block-title">${block.name}</div>
+      ${block.items.map((item, ii) => {
+        const ex = { ...parseItem(item), id: exerciseId(fotballSelectedDay, bi, ii) };
+        return renderExerciseRow(fotballSelectedDate, ex);
+      }).join('')}
+    `).join('');
+    content += `<div class="progress-bar-wrap" style="margin-top:14px"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;text-align:right">${done}/${total} fullført</div>`;
+  }
+
+  document.getElementById('fotball-day-view').innerHTML = `
+    <div class="card">
+      <div class="fotball-day-header">
+        <div class="fotball-day-title">${dayData ? dayData.title : 'Ingen økt'}</div>
+        <div class="fotball-day-sub">${dayName.charAt(0).toUpperCase() + dayName.slice(1)}${isToday ? ' · I dag' : ''}</div>
+      </div>
+      <div style="margin-top:16px">${content}</div>
+    </div>`;
 }
 
 function renderFotball() {
-  const dateStr = fotballDateStr(fotballOffset);
-  const d = new Date(dateStr + 'T12:00:00');
-  const fase = dateStr <= '2026-06-11' ? 'Sesong' : dateStr <= '2026-06-28' ? 'Grind mode' : 'Sommergrindet';
-  document.getElementById('fotball-fase').textContent = 'Blåmann FK · ' + fase;
+  const periodLabel = fotballPeriod === 'danmark' ? 'Danmark' : 'Norge';
+  document.getElementById('fotball-fase').textContent = 'Blåmann FK · ' + periodLabel;
 
-  // Kamp countdown
   const kampDiff = Math.ceil((new Date(NEXT_KAMP) - new Date(TODAY)) / 86400000);
   const cdEl = document.getElementById('fotball-kamp-countdown');
   cdEl.textContent = kampDiff > 0 ? kampDiff + ' dager' : kampDiff === 0 ? 'I dag!' : 'Spilt';
 
-  // Grind stats
-  const grindDates = Object.keys(PROGRAM).filter(d => d >= '2026-06-08' && d <= '2026-06-28');
-  const grindDone = grindDates.filter(d => isDayDone(d)).length;
+  const weekDates = getWeekDates();
+  const trainingDays = weekDates.filter(w => isTrainingDay(w.key));
+  const grindDone = trainingDays.filter(w => isDayDone(w.dateStr, w.key)).length;
   document.getElementById('fotball-grind-done').textContent = grindDone;
-  document.getElementById('fotball-grind-bar').style.width = Math.round((grindDone/21)*100) + '%';
+  document.getElementById('fotball-grind-bar').style.width = Math.round((grindDone / trainingDays.length) * 100) + '%';
+  document.getElementById('fotball-grind-label').textContent = '/ ' + trainingDays.length + ' økter denne uka';
 
-  // Week done
-  const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
-  let weekDone = 0;
-  for (let i = 0; i < 6; i++) {
-    const wd = new Date(weekStart); wd.setDate(wd.getDate() + i);
-    if (isDayDone(wd.toISOString().slice(0,10))) weekDone++;
-  }
+  const weekDone = trainingDays.filter(w => isDayDone(w.dateStr, w.key)).length;
   document.getElementById('fotball-week-done').textContent = weekDone;
 
-  // Weight
   const wh = state.weightHistory;
   if (wh.length > 0) {
     const latest = wh[wh.length - 1].weight;
@@ -1468,60 +1912,20 @@ function renderFotball() {
     diffEl.style.color = diff >= 0 ? 'var(--green)' : 'var(--red)';
   }
 
-  // Week grid
-  const dayLabels = ['Man','Tir','Ons','Tor','Fre','Lør','Søn'];
-  document.getElementById('fotball-week-grid').innerHTML = dayLabels.map((day, i) => {
-    const wd = new Date(weekStart); wd.setDate(wd.getDate() + i);
-    const ds = wd.toISOString().slice(0,10);
-    const isToday = ds === TODAY;
-    const done = isDayDone(ds);
-    const hasProg = !!PROGRAM[ds];
-    return `<div class="week-dot${isToday?' today':''}${done?' done':''}" onclick="fotballJumpTo('${ds}')">
-      <div class="wd-day">${day}</div>
-      <div class="wd-dot"></div>
-      <div style="font-size:8px;color:${hasProg?'inherit':'var(--muted2)'}">${hasProg?(done?'✓':'·'):'—'}</div>
-    </div>`;
-  }).join('');
+  if (fotballView === 'week') renderFotballWeekView();
+  else renderFotballDayView();
 
-  // Day navigator
-  const dayName = d.toLocaleDateString('nb-NO', { weekday:'long', day:'numeric', month:'long' });
-  document.getElementById('fotball-nav-date').textContent = dayName.charAt(0).toUpperCase() + dayName.slice(1);
-  document.getElementById('fotball-nav-label').textContent = fotballOffset === 0 ? 'I dag' : fotballOffset < 0 ? Math.abs(fotballOffset) + ' dager siden' : 'Om ' + fotballOffset + ' dager';
-
-  // Session
-  const session = PROGRAM[dateStr];
-  const titleEl = document.getElementById('fotball-session-title');
-  const contentEl = document.getElementById('fotball-session-content');
-  if (!session) {
-    titleEl.textContent = 'Ingen økt';
-    contentEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:6px 0">Ingen økt planlagt denne dagen.</div>';
-  } else {
-    titleEl.textContent = session.title;
-    const done = state.sessionChecks[dateStr] || {};
-    const doneCount = session.tasks.filter(t => done[t.id]).length;
-    const pct = Math.round((doneCount / session.tasks.length) * 100);
-    contentEl.innerHTML = session.tasks.map(t => `
-      <div class="routine-item${done[t.id]?' done':''}" onclick="toggleFotballTask('${dateStr}','${t.id}')">
-        <div class="routine-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor"><polyline points="2 6 5 9 10 3"/></svg></div>
-        <span class="routine-label" style="font-size:13px">${t.label}</span>
-      </div>`).join('') +
-      `<div class="progress-bar-wrap" style="margin-top:14px"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
-      <div style="font-size:11px;color:var(--muted);margin-top:8px;text-align:right">${doneCount}/${session.tasks.length} fullført</div>`;
-  }
-
-  // Energy + note restore
-  const curLog = state.sessionLogs[dateStr] || {};
+  const curLog = state.sessionLogs[TODAY] || {};
   renderEnergyBtns(curLog.energy || 0);
   document.getElementById('session-note').value = curLog.note || '';
 
-  // History
   const histEl = document.getElementById('fotball-session-history');
-  const allLogs = grindDates.map(ds => ({ date: ds, ...(state.sessionLogs[ds] || {}) }))
+  const allLogs = weekDates.map(w => ({ date: w.dateStr, ...(state.sessionLogs[w.dateStr] || {}) }))
     .filter(l => l.note || l.energy || l.weight).reverse();
-  const energyLabels = ['','😴','😐','🙂','💪','🔥'];
+  const energyLabels = ['', '😴', '😐', '🙂', '💪', '🔥'];
   histEl.innerHTML = allLogs.length === 0
     ? '<div style="color:var(--muted);font-size:13px;padding:6px 0">Ingen logger ennå</div>'
-    : allLogs.slice(0,8).map(l => `
+    : allLogs.slice(0, 8).map(l => `
       <div class="log-item" style="flex-direction:column;align-items:flex-start;gap:4px;padding:12px 0">
         <div style="display:flex;justify-content:space-between;width:100%">
           <span class="log-date">${l.date}</span>
@@ -1530,6 +1934,11 @@ function renderFotball() {
         ${l.note ? `<div style="font-size:13px;color:var(--text)">${l.note}</div>` : ''}
       </div>`).join('');
 }
+
+// Init football view defaults
+fotballSelectedDay = getWeekdayKey(TODAY);
+fotballSelectedDate = TODAY;
+setFotballView('day');
 
 // ── NAV ───────────────────────────────────────────────────
 function goTo(page, btn) {
