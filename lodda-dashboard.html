@@ -322,6 +322,59 @@ nav {
 .fotball-day-title { font-family:'Bebas Neue',sans-serif; font-size:26px; letter-spacing:0.04em; line-height:1; }
 .fotball-day-sub { font-size:12px; color:var(--muted); margin-top:4px; }
 
+/* STRENGTH LOG */
+.fotball-ex-log {
+  background:none; border:none; color:var(--muted2); cursor:pointer;
+  padding:4px; display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; transition:color 0.15s;
+}
+.fotball-ex-log:hover { color:var(--gold); }
+.fotball-ex-log.has-data { color:var(--gold); }
+.fotball-ex-log svg { width:16px; height:16px; stroke-width:1.5; }
+.fotball-ex-actions { display:flex; gap:4px; flex-shrink:0; }
+#strength-log-overlay {
+  display:none; position:fixed; inset:0; z-index:260;
+  background:rgba(0,0,0,0.85); backdrop-filter:blur(8px);
+  align-items:flex-end; justify-content:center;
+  padding:0 0 max(80px, env(safe-area-inset-bottom));
+}
+#strength-log-overlay.open { display:flex; }
+.strength-log-sheet {
+  background:var(--bg2); border:1px solid var(--border);
+  border-radius:var(--radius) var(--radius) 0 0;
+  width:100%; max-width:480px; max-height:80vh; overflow-y:auto; padding:20px;
+  animation:slideUp 0.25s ease;
+}
+.strength-prev {
+  background:var(--gold-dim); border:1px solid rgba(201,168,76,0.2);
+  border-radius:var(--radius-sm); padding:12px 14px; margin:12px 0 16px;
+  font-size:12px; color:var(--muted);
+}
+.strength-prev strong { color:var(--gold); font-weight:500; }
+.strength-set-row {
+  display:flex; align-items:center; gap:10px; margin-bottom:10px;
+}
+.strength-set-label {
+  font-size:11px; color:var(--muted); width:42px; flex-shrink:0;
+  font-family:'DM Mono',monospace;
+}
+.strength-inp {
+  flex:1; background:var(--bg3); border:1px solid var(--border2);
+  border-radius:var(--radius-sm); color:var(--text);
+  font-family:'DM Mono',monospace; font-size:16px;
+  padding:14px 12px; outline:none; min-width:0;
+}
+.strength-inp:focus { border-color:var(--gold); }
+.strength-chart-wrap { margin-top:16px; }
+.strength-chart { display:flex; align-items:flex-end; gap:6px; height:100px; margin-top:12px; }
+.strength-chart-bar-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; justify-content:flex-end; height:100%; }
+.strength-chart-bar {
+  width:100%; background:var(--gold); border-radius:3px 3px 0 0;
+  min-height:3px; transition:height 0.4s ease;
+}
+.strength-chart-label { font-size:8px; color:var(--muted); }
+.strength-chart-val { font-size:9px; color:var(--gold); font-family:'DM Mono',monospace; }
+
 /* WHOOP placeholder card */
 .whoop-soon { text-align:center; padding: 40px 20px; }
 
@@ -831,6 +884,20 @@ nav {
   </div>
 </div>
 
+<div id="strength-log-overlay" onclick="if(event.target===this)closeStrengthLog()">
+  <div class="strength-log-sheet" onclick="event.stopPropagation()">
+    <div class="edit-day-header">
+      <div>
+        <div class="edit-day-title" id="strength-log-title">Logg styrke</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px" id="strength-log-date"></div>
+      </div>
+      <button class="btn-ghost" onclick="closeStrengthLog()">Lukk</button>
+    </div>
+    <div id="strength-log-prev"></div>
+    <div id="strength-log-sets"></div>
+  </div>
+</div>
+
 <nav>
   <button class="nav-btn active" onclick="goTo('hjem',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -1022,6 +1089,21 @@ async function saveSavingsGoalDB(amount) {
   );
 }
 
+async function loadAllStrengthLogs() {
+  const { data } = await sb.from('strength_logs')
+    .select('date, exercise, sets')
+    .order('date', { ascending: true });
+  return data || [];
+}
+
+async function saveStrengthLogDB(date, exercise, sets) {
+  const userId = await getUserId();
+  await sb.from('strength_logs').upsert(
+    { user_id: userId, date, exercise, sets },
+    { onConflict: 'user_id,date,exercise' }
+  );
+}
+
 // ── AUTH ──────────────────────────────────────────────────
 let currentUser = null;
 
@@ -1097,7 +1179,7 @@ async function initAuth() {
 
 async function initApp() {
   await ensureDefaultRewards();
-  const [routineData, workDays, expenses, sessionChecks, sessionLogs, weightHistory, soberStart, rewards, savingsGoal] = await Promise.all([
+  const [routineData, workDays, expenses, sessionChecks, sessionLogs, weightHistory, soberStart, rewards, savingsGoal, strengthLogs] = await Promise.all([
     loadAllRoutineChecks(),
     loadWorkDays(),
     loadExpenses(),
@@ -1106,7 +1188,8 @@ async function initApp() {
     loadWeightHistory(),
     loadSoberStart(),
     loadRewards(),
-    loadSavingsGoal()
+    loadSavingsGoal(),
+    loadAllStrengthLogs()
   ]);
 
   state.routines = {};
@@ -1129,6 +1212,10 @@ async function initApp() {
   state.soberStart = soberStart || TODAY;
   state.rewards = rewards;
   state.savingsGoal = savingsGoal;
+  state.strengthLogsByKey = {};
+  strengthLogs.forEach(row => {
+    state.strengthLogsByKey[`${row.date}|${row.exercise}`] = row.sets || [];
+  });
 
   renderHome();
   renderRutiner();
@@ -1147,6 +1234,7 @@ let state = {
   weightHistory: [],
   rewards: [],
   savingsGoal: 0,
+  strengthLogsByKey: {},
 };
 let editDayDate = null;
 
@@ -1811,19 +1899,200 @@ async function saveSessionLog() {
   renderFotball();
 }
 
-function renderExerciseRow(dateStr, ex) {
+function isStrengthLoggable(blockName, name, detail) {
+  if (/sprint|bane|teknikk|mobility|kondis|oppvarming|recovery|golf|stranda|lagtrening/i.test(blockName)) return false;
+  if (!/(\d+)\s*×\s*(\d+)/.test(detail)) return false;
+  if (/×\s*\d+\s*m\b/i.test(detail)) return false;
+  if (/×\s*\d+\s*(sek|min)\b/i.test(detail)) return false;
+  return true;
+}
+
+function parseSetCount(detail) {
+  const m = detail.match(/(\d+)\s*×/);
+  return m ? parseInt(m[1], 10) : 3;
+}
+
+function strengthLogKey(date, exercise) {
+  return `${date}|${exercise}`;
+}
+
+function getStrengthSets(date, exercise) {
+  return state.strengthLogsByKey[strengthLogKey(date, exercise)] || [];
+}
+
+function getPreviousStrengthLog(exercise, beforeDate) {
+  let best = null;
+  Object.keys(state.strengthLogsByKey).forEach(key => {
+    const [date, ex] = key.split('|');
+    if (ex !== exercise || date >= beforeDate) return;
+    const sets = state.strengthLogsByKey[key];
+    if (!sets || !sets.length) return;
+    if (!best || date > best.date) best = { date, sets };
+  });
+  return best;
+}
+
+function formatStrengthSets(sets) {
+  return sets.map(s => `${s.weight || 0}kg × ${s.reps || 0}`).join(', ');
+}
+
+function getLoggedExercises() {
+  const names = new Set();
+  Object.keys(state.strengthLogsByKey).forEach(key => {
+    const sets = state.strengthLogsByKey[key];
+    if (sets && sets.length) names.add(key.split('|')[1]);
+  });
+  return [...names].sort();
+}
+
+function getExerciseHistory(exercise) {
+  return Object.keys(state.strengthLogsByKey)
+    .filter(k => k.endsWith(`|${exercise}`))
+    .map(k => {
+      const sets = state.strengthLogsByKey[k] || [];
+      const date = k.split('|')[0];
+      const maxWeight = sets.reduce((m, s) => Math.max(m, s.weight || 0), 0);
+      const volume = sets.reduce((sum, s) => sum + (s.weight || 0) * (s.reps || 0), 0);
+      return { date, sets, maxWeight, volume };
+    })
+    .filter(e => e.sets.length)
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+let strengthLogCtx = null;
+
+function openStrengthLog(dateStr, exerciseName, setCount) {
+  strengthLogCtx = { date: dateStr, exercise: exerciseName, setCount };
+  document.getElementById('strength-log-overlay').classList.add('open');
+  renderStrengthLogModal();
+}
+
+function closeStrengthLog() {
+  strengthLogCtx = null;
+  document.getElementById('strength-log-overlay').classList.remove('open');
+  renderFotball();
+}
+
+function renderStrengthLogModal() {
+  if (!strengthLogCtx) return;
+  const { date, exercise, setCount } = strengthLogCtx;
+  document.getElementById('strength-log-title').textContent = exercise;
+  const d = new Date(date + 'T12:00:00');
+  document.getElementById('strength-log-date').textContent = d.toLocaleDateString('nb-NO', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  const prev = getPreviousStrengthLog(exercise, date);
+  document.getElementById('strength-log-prev').innerHTML = prev
+    ? `<div class="strength-prev"><strong>Sist (${prev.date}):</strong> ${formatStrengthSets(prev.sets)}</div>`
+    : '<div class="strength-prev">Ingen tidligere logg for denne øvelsen.</div>';
+
+  const sets = getStrengthSets(date, exercise);
+  const rows = [];
+  for (let i = 1; i <= setCount; i++) {
+    const s = sets.find(x => x.set === i) || { set: i, weight: '', reps: '' };
+    rows.push(`<div class="strength-set-row">
+      <span class="strength-set-label">Sett ${i}</span>
+      <input class="strength-inp" type="number" inputmode="decimal" placeholder="kg" value="${s.weight || ''}"
+        onchange="updateStrengthField(${i},'weight',this.value)" onblur="updateStrengthField(${i},'weight',this.value)"/>
+      <input class="strength-inp" type="number" inputmode="numeric" placeholder="reps" value="${s.reps || ''}"
+        onchange="updateStrengthField(${i},'reps',this.value)" onblur="updateStrengthField(${i},'reps',this.value)"/>
+    </div>`);
+  }
+  document.getElementById('strength-log-sets').innerHTML = rows.join('');
+}
+
+async function updateStrengthField(setNum, field, value) {
+  if (!strengthLogCtx) return;
+  const { date, exercise, setCount } = strengthLogCtx;
+  const key = strengthLogKey(date, exercise);
+  let sets = [...getStrengthSets(date, exercise)];
+  let row = sets.find(s => s.set === setNum);
+  if (!row) {
+    row = { set: setNum, weight: null, reps: null };
+    sets.push(row);
+  }
+  row[field] = value === '' ? null : parseFloat(value);
+  sets = sets.filter(s => s.weight != null || s.reps != null);
+  sets.sort((a, b) => a.set - b.set);
+  state.strengthLogsByKey[key] = sets;
+  await saveStrengthLogDB(date, exercise, sets);
+}
+
+function renderStrengthChart(exercise, metric) {
+  const history = getExerciseHistory(exercise);
+  if (!history.length) return '<div style="color:var(--muted);font-size:12px;padding:8px 0">Ingen data ennå</div>';
+  const values = history.map(h => metric === 'volume' ? h.volume : h.maxWeight);
+  const maxVal = Math.max(...values, 1);
+  return `<div class="strength-chart">${history.map(h => {
+    const val = metric === 'volume' ? h.volume : h.maxWeight;
+    const hPct = Math.round((val / maxVal) * 100);
+    const label = new Date(h.date + 'T12:00:00').toLocaleDateString('nb-NO', { day: 'numeric', month: 'short' });
+    return `<div class="strength-chart-bar-col">
+      <div class="strength-chart-val">${metric === 'volume' ? Math.round(val) : val}</div>
+      <div class="strength-chart-bar" style="height:${Math.max(hPct, 4)}%"></div>
+      <div class="strength-chart-label">${label}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+let strengthChartExercise = null;
+let strengthChartMetric = 'max';
+
+function setStrengthChartExercise(name) {
+  strengthChartExercise = name;
+  renderStrengthProgressSection();
+}
+
+function setStrengthChartMetric(metric) {
+  strengthChartMetric = metric;
+  renderStrengthProgressSection();
+}
+
+function renderStrengthProgressSection() {
+  const el = document.getElementById('strength-progress-section');
+  if (!el) return;
+  const exercises = getLoggedExercises();
+  if (!exercises.length) {
+    el.innerHTML = '';
+    return;
+  }
+  if (!strengthChartExercise || !exercises.includes(strengthChartExercise)) {
+    strengthChartExercise = exercises[exercises.length - 1];
+  }
+  el.innerHTML = `
+    <div class="section-label">Styrkeprogresjon</div>
+    <div class="card">
+      <select class="inp" style="width:100%;margin-bottom:10px;font-family:'DM Sans',sans-serif" onchange="setStrengthChartExercise(this.value)">
+        ${exercises.map(e => `<option value="${e.replace(/"/g, '&quot;')}"${e === strengthChartExercise ? ' selected' : ''}>${e}</option>`).join('')}
+      </select>
+      <div class="fotball-toggles" style="margin-bottom:0">
+        <button class="fotball-toggle${strengthChartMetric === 'max' ? ' active' : ''}" onclick="setStrengthChartMetric('max')">Maks vekt</button>
+        <button class="fotball-toggle${strengthChartMetric === 'volume' ? ' active' : ''}" onclick="setStrengthChartMetric('volume')">Volum</button>
+      </div>
+      <div class="strength-chart-wrap">${renderStrengthChart(strengthChartExercise, strengthChartMetric === 'volume' ? 'volume' : 'max')}</div>
+    </div>`;
+}
+
+function renderExerciseRow(dateStr, ex, blockName) {
   const checks = state.sessionChecks[dateStr] || {};
   const isDone = !!checks[ex.id];
-  const safeName = ex.name.replace(/'/g, "\\'");
+  const safeName = ex.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+  const loggable = isStrengthLoggable(blockName, ex.name, ex.detail);
+  const hasLog = getStrengthSets(dateStr, ex.name).length > 0;
+  const logBtn = loggable ? `<button class="fotball-ex-log${hasLog ? ' has-data' : ''}" onclick="event.stopPropagation();openStrengthLog('${dateStr}',${JSON.stringify(ex.name)},${parseSetCount(ex.detail)})" aria-label="Logg ${ex.name}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+    </button>` : '';
   return `<div class="fotball-exercise${isDone ? ' done' : ''}" onclick="toggleFotballExercise('${dateStr}','${ex.id}')">
     <div class="fotball-ex-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor"><polyline points="2 6 5 9 10 3"/></svg></div>
     <div class="fotball-ex-info">
       <div class="fotball-ex-name fotball-ex-label">${ex.name}</div>
       <div class="fotball-ex-detail">${ex.detail}</div>
     </div>
-    <button class="fotball-ex-search" onclick="event.stopPropagation();searchExercise('${safeName}')" aria-label="Søk ${ex.name}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    </button>
+    <div class="fotball-ex-actions">
+      ${logBtn}
+      <button class="fotball-ex-search" onclick="event.stopPropagation();searchExercise('${safeName}')" aria-label="Søk ${ex.name}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+    </div>
   </div>`;
 }
 
@@ -1867,7 +2136,7 @@ function renderFotballDayView() {
       <div class="fotball-block-title">${block.name}</div>
       ${block.items.map((item, ii) => {
         const ex = { ...parseItem(item), id: exerciseId(fotballSelectedDay, bi, ii) };
-        return renderExerciseRow(fotballSelectedDate, ex);
+        return renderExerciseRow(fotballSelectedDate, ex, block.name);
       }).join('')}
     `).join('');
     content += `<div class="progress-bar-wrap" style="margin-top:14px"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
@@ -1881,7 +2150,9 @@ function renderFotballDayView() {
         <div class="fotball-day-sub">${dayName.charAt(0).toUpperCase() + dayName.slice(1)}${isToday ? ' · I dag' : ''}</div>
       </div>
       <div style="margin-top:16px">${content}</div>
-    </div>`;
+    </div>
+    <div id="strength-progress-section"></div>`;
+  renderStrengthProgressSection();
 }
 
 function renderFotball() {
