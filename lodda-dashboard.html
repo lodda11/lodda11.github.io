@@ -473,17 +473,25 @@ nav { padding: 8px 0 max(8px, env(safe-area-inset-bottom)); }
 }
 .kriger-image-stage {
   position: relative; width: 100%; max-width: 100%; margin: 0 auto 10px;
-  border-radius: var(--radius); overflow: visible;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius); overflow: hidden;
+  max-height: 400px;
 }
 .kriger-image-glow {
-  position: absolute; inset: -6px; border-radius: calc(var(--radius) + 2px);
+  position: absolute; inset: 0; border-radius: var(--radius);
   pointer-events: none; z-index: 0; opacity: 1;
   transition: box-shadow 0.7s ease, opacity 0.7s ease;
 }
 .kriger-hero-img {
-  position: relative; z-index: 1; width: 100%; height: auto; display: block;
-  border-radius: var(--radius); object-fit: cover;
+  position: relative; z-index: 1;
+  max-width: 100%; max-height: 400px; width: auto; height: auto;
+  display: block; margin: 0 auto;
+  border-radius: var(--radius); object-fit: contain;
   transition: filter 0.7s ease, opacity 0.5s ease, transform 0.7s ease;
+}
+@media (min-width: 768px) {
+  .kriger-image-stage { max-height: 500px; }
+  .kriger-hero-img { max-height: 500px; }
 }
 .kriger-image-stage.recovery-high .kriger-image-glow {
   box-shadow: 0 0 45px rgba(201,168,76,0.5), 0 0 90px rgba(201,168,76,0.18);
@@ -626,7 +634,8 @@ nav { padding: 8px 0 max(8px, env(safe-area-inset-bottom)); }
   position: relative; width: 100%; height: 100%; border-radius: var(--radius); overflow: hidden;
 }
 .kriger-levelup-img {
-  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: contain; object-position: center;
   border-radius: var(--radius); opacity: 0;
 }
 .kriger-levelup-img.old { opacity: 1; z-index: 1; }
@@ -3449,10 +3458,28 @@ function detectWarriorBadges(stats) {
 }
 
 const HERO_LEVEL_MAX_IMAGE = 10;
+const HERO_IMAGE_FOLDER = 'hero level';
 const heroImagePreloaded = new Set();
 
 function getHeroImageUrl(imageLevel) {
-  return encodeURI(`hero level/level ${imageLevel}.jpeg`);
+  const filename = `level ${imageLevel}.jpeg`;
+  const encodedPath = [HERO_IMAGE_FOLDER, filename].map(encodeURIComponent).join('/');
+  const relativeUrl = `./${encodedPath}`;
+  let absoluteUrl = relativeUrl;
+  try {
+    absoluteUrl = new URL(relativeUrl, window.location.href).href;
+  } catch (e) {
+    absoluteUrl = relativeUrl;
+  }
+  console.log('[Kriger] Hero image URL attempt:', {
+    level: imageLevel,
+    folder: HERO_IMAGE_FOLDER,
+    filename,
+    relative: relativeUrl,
+    absolute: absoluteUrl,
+    page: window.location.href,
+  });
+  return relativeUrl;
 }
 
 function getHeroImageLevelForUser(userLevel) {
@@ -3464,7 +3491,9 @@ function preloadHeroImages() {
   for (let i = 1; i <= HERO_LEVEL_MAX_IMAGE; i++) {
     if (heroImagePreloaded.has(i)) continue;
     const img = new Image();
-    img.src = getHeroImageUrl(i);
+    const url = getHeroImageUrl(i);
+    img.onerror = () => console.error('[Kriger] Preload failed:', url);
+    img.src = url;
     heroImagePreloaded.add(i);
   }
 }
@@ -3482,6 +3511,12 @@ function setHeroImage(imgEl, userLevel) {
   const url = getHeroImageUrl(imageLevel);
   if (imgEl.dataset.imageLevel !== String(imageLevel)) {
     imgEl.dataset.imageLevel = imageLevel;
+    imgEl.onerror = () => {
+      let resolved = url;
+      try { resolved = new URL(url, window.location.href).href; } catch (e) {}
+      console.error('[Kriger] Image load FAILED:', { url, resolved, level: imageLevel });
+    };
+    imgEl.onload = () => console.log('[Kriger] Image load OK:', url);
     imgEl.src = url;
   }
 }
